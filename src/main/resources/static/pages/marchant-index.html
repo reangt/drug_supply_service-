@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>商家用户主页</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .pur{
+            /*padding: 15px;*/
+            margin-bottom: 50px;
+            margin-right: 10px;
+            margin-left: 10px;
+            margin-top: 10px;
+        }
+        .pp{
+            margin-top: 10px;
+        }
+        .content-header > h1 {
+            margin: 0 ;
+            font-size: 24px;
+            font-weight: normal;
+        }
+        .filter-container{
+
+            padding:10px 0 15px 0;
+
+        }
+        .filter-container .el-button,.filter-container .el-input__inner{
+
+            padding: 0 15px;
+
+            height: 34px;
+
+            line-height: 34px;
+
+        }
+        .pagiantion{
+
+            text-align: right;
+
+            padding: 15px;
+
+        }
+        .el-row {
+            margin-bottom: 20px;
+            margin-left: 50px;
+        }
+        .last-child {
+            margin-bottom: 0;
+        }
+
+        .el-col {
+            border-radius: 4px;
+            margin-left: 10px;
+            margin-right: 30px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+        }
+        .bg-purple-dark {
+            background: #99a9bf;
+        }
+        .bg-purple {
+            background: #d3dce6;
+        }
+        .bg-purple-light {
+            background: #e5e9f2;
+        }
+        .grid-content {
+            border-radius: 4px;
+            min-height: 36px;
+        }
+        .row-bg {
+            padding: 10px 0;
+            background-color: #f9fafc;
+        }
+        .vvvvvv{
+            height: 230px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-breadcrumb separator-class="el-icon-arrow-right">
+        <el-breadcrumb-item ><a href="marchant-index.html">首页</a></el-breadcrumb-item>
+        <el-breadcrumb-item><a href="marchant.html">个人信息</a></el-breadcrumb-item>
+        <el-breadcrumb-item><a href="stock.html">我的库存</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="marchant-order.html">订单管理</a></el-breadcrumb-item>
+    </el-breadcrumb>
+    <div class="purr">
+        <input type="file" @change="onchangemd">
+        <el-button type="warning" icon="el-icon-arrow-right" @click="gouser()">个人信息</el-button>
+    </div>
+    <div class="pur">
+        <div class="filter-container">
+            <el-input placeholder="药品id" v-model="pagination.id" clearable style="width: 200px;" ></el-input>
+            <el-button @click="getById()" icon="el-icon-search" type="primary" plain class="dalfBut">查询</el-button>
+            <el-input placeholder="药品名称" v-model="pagination.name" clearable style="width: 200px;" ></el-input>
+            <el-button @click="getByName()" icon="el-icon-search" type="primary" plain class="dalfBut">查询</el-button>
+        </div>
+        <div class="aaaa">
+            <el-row :gutter="20">
+                <!--                <template style="flex: 1" v-for="(person, index) in persons">-->
+                <template style="flex: 1" v-for="(person, index) in tableData">
+                    <div class="aaaaa">
+                        <el-col :span="5" class="vvvvvv">
+                            <el-descriptions title="药品信息" :column="2" class="margin-top" border>
+                                <template slot="extra">
+                                    <el-button type="primary" size="small" @click="ddj(person.id)">查看详情</el-button>
+                                </template>
+                                <el-descriptions-item label="药品图片">
+                                    <el-image style="max-width: 160px;max-height: 70px" :src="person.portraitpath"></el-image>
+                                </el-descriptions-item>
+                                <el-descriptions-item label="药品名称">
+                                    <a>{{ person.name }}</a>
+                                </el-descriptions-item>
+                                <el-descriptions-item label="价格">
+                                    <el-tag size="small">￥{{person.price}}</el-tag>
+                                </el-descriptions-item>
+                                <el-descriptions-item label="库存">
+                                    <el-tag size="small">{{person.quantity}}</el-tag>
+                                </el-descriptions-item>
+                                <!--                                <el-descriptions-item label="厂家">-->
+                                <!--                                    <el-tag size="small">{{person.manufacturer}}</el-tag>-->
+                                <!--                                </el-descriptions-item>-->
+                                <!--                                <el-descriptions-item label="规格">-->
+                                <!--                                    <el-tag size="small">{{person.specification}}</el-tag>-->
+                                <!--                                </el-descriptions-item>-->
+                            </el-descriptions>
+                        </el-col>
+                    </div>
+                </template>
+            </el-row>
+        </div>
+    </div>
+    <!--分页组件-->
+    <div class="pagination-container">
+        <el-pagination
+                class="pagiantion"
+                @current-change="handleCurrentChange"
+                :current-page="pagination.currentPage"
+                :page-size="pagination.pageSize"
+                layout="total, prev, pager, next, jumper"
+                :total="pagination.total">
+        </el-pagination>
+    </div>
+
+
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            // alert("初始化完成")
+            // this.login()
+            this.getAll();
+        },
+        data:{
+            url:'',
+            isReload: true,
+            persons: [
+                { name: "岚枫秋55",price:14.52,portraitpath:"https://drugimage.oss-cn-beijing.aliyuncs.com/bbs/2022/05/01/2e2ffc2f-8886-40e5-8c45-5bf0262fcbef.jpg"},
+                { name: 'Json'},
+                { name: "岚枫秋55555555fffffffff秋",price:14.52},
+                { name: "岚枫秋55555555fffffffff秋",price:14.52},
+                { name: "岚枫秋55555555fffffffff秋",price:14.52},
+                { name: "岚枫秋55555555fffffffff秋",price:14.52},
+                { name: "岚枫秋55555555fffffffff秋",price:14.52},
+                { name: "岚枫秋55555555fffffffff秋",price:14.52},
+                { name: "岚枫秋55555555fffffffff秋",price:14.52},
+            ],
+            tableData:[],
+            pagination: {//分页相关模型数据
+                currentPage: 1,//当前页码
+                pageSize:16,//每页显示的记录数
+                total:0,//总记录数
+                type:"",
+                id:null,
+                name:"",
+                quantity:""
+            }
+        },
+        methods:{
+            onchangemd(e){
+                console.log(e.target.files);
+                // if (e.target.files==null){
+                //     this.$message.error("未提交图片");
+                //     return
+                // }
+                let formdata = new FormData();
+                Array.from(e.target.files).map(item => {
+                    console.log(item)
+                    formdata.append("file", item)  //将每一个文件图片都加进formdata
+                    axios.post("/system/upload", formdata).then(res => {
+                        console.log(res);
+                        this.$message.success("上传成功");
+                        this.src=res.data;
+                    })
+                })
+            },
+            gouser(){
+                window.location.href = "marchant.html";
+            },
+            ddj(e){
+                //   console.log(e)
+                // this.$message.success("要跳了")
+                var n=e;
+                this.$message.warning("您是商家")
+                // window.location.href = "drug-index.html?id="+n;
+            },
+            getAll() {
+                axios.post("/drugs/all/"+this.pagination.currentPage+"/"+this.pagination.pageSize,this.pagination).then((res)=>{
+                    console.log(res.data);
+                    this.pagination.pageSize=res.data.data.size;
+                    this.pagination.currentPage=res.data.data.current;
+                    this.pagination.total=res.data.data.total;
+                    this.tableData=res.data.data.records;
+                });
+            },
+            handleUpdate(){
+
+            },
+            handleCurrentChange(currentPage) {
+                this.pagination.currentPage=currentPage;
+                this.getAll();
+            },
+            getById(){
+                id=Number(this.pagination.id);
+                if (id==0){
+                    this.$message.error("请输入要查询的药品id");
+                    return
+                }
+                if (!Number.isInteger(id)){
+                    console.log(this.pagination.id);
+                    this.$message.error("请输入整数");
+                    this.pagination.id="";
+                    return
+                }
+                this.pagination.name="";
+                this.getAll();
+            },
+            getByName(){
+                this.pagination.id=null;
+                if (Number(this.pagination.name)==0){
+                    this.pagination.name="";
+                }
+                this.getAll();
+            }
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+#本地配置
+file:
+  staticPath: /upimag/**
+  uploadpath: F:/tmp/

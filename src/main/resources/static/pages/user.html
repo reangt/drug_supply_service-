@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户信息页</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .f {
+            /*margin-top: 10%;*/
+            /*margin-left: 40%;*/
+            margin-right:80%;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="">
+    <el-breadcrumb separator-class="el-icon-arrow-right">
+        <el-breadcrumb-item ><a href="user-personal-index.html">首页</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="user.html">个人信息</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="shoppingcart.html">购物车</a></el-breadcrumb-item>
+        <el-breadcrumb-item>商品详情页</el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="user-order.html">订单管理</a></el-breadcrumb-item>
+    </el-breadcrumb>
+    <br>
+    <el-avatar :size="50" :src="user.portraitpath"></el-avatar>
+    <el-button type="warning" icon="el-icon-arrow-right" @click="exitlogin()">退出登录</el-button>
+    <el-button type="success" icon="el-icon-refresh-right" @click="tokenlogin()">刷新</el-button>
+<!--    {{user.gender}}-->
+    <div class="f">
+        <el-form ref="user" :model="user" label-width="80px">
+            <el-form-item label="用户名称">
+                <el-input placeholder="暂无数据，请刷新重试" v-model="user.name" :disabled=flag></el-input>
+            </el-form-item>
+            <el-form-item label="用户资质">
+                <el-input placeholder="暂无数据，请刷新重试" v-model="user.flag" :disabled="true"></el-input>
+            </el-form-item>
+            <el-form-item label="用户性别">
+<!--                <el-input placeholder="暂无数据，请刷新重试" v-model="user.gender" :disabled=flag></el-input>-->
+                <el-select v-model="user.gender" placeholder="暂无数据，请刷新重试" :disabled=flag>
+                    <el-option label="男性" value="男"></el-option>
+                    <el-option label="女性" value="女"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="用户邮箱">
+                <el-input placeholder="暂无数据，请刷新重试" v-model="user.email" :disabled=flag></el-input>
+            </el-form-item>
+            <el-form-item label="用户电话">
+                <el-input placeholder="暂无数据，请刷新重试" v-model="user.telephone" :disabled=flag></el-input>
+            </el-form-item>
+            <el-form-item label="用户地址">
+                <el-input placeholder="暂无数据，请刷新重试" v-model="user.address" :disabled=flag></el-input>
+            </el-form-item>
+        </el-form>
+        <el-button type="primary" icon="el-icon-edit" @click="xg()">{{flagtext}}</el-button>
+        <el-popover placement="right" width="400" trigger="click">
+            <input type="file" @change="replace">
+            <el-button type="primary" icon="el-icon-upload"  slot="reference" @click="">上传资质证明文件</el-button>
+        </el-popover>
+        <el-button type="primary" icon="el-icon-upload" @click="">提交</el-button>
+    </div>
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            // alert("初始化完成")
+            this.tokenlogin()
+        },
+        data:{
+            circleUrl: "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
+            squareUrl: "https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png",
+            sizeList: ["large", "medium", "small"],
+            user:{
+                name:'',
+                password:'',
+                flag:'',
+                certificatepath:'',
+                gender:'',
+                email:'',
+                telephone:'',
+                address:'',
+                portraitpath:'',
+            },
+            flag:true,
+            flagtext:"修改",
+            res:''
+        },
+        methods:{
+            xg(){
+                if (this.flag){
+                    this.flag=false;
+                    this.flagtext="退出修改";
+                }else {
+                    this.flag=true;
+                    this.flagtext="修改";
+                    this.tokenlogin();
+                }
+
+            },
+            tokenlogin(){
+                token=localStorage.getItem("token");
+                if (token==null){
+                    // this.$message.error("token为空,即将返回登录页");
+                    alert("token为空,即将返回登录页");
+                    window.location.href = "login.html";
+                    return ;
+                }
+                axios({
+                    method: 'get',
+                    url: '/system/getInfo',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': "application/json;charset=UTF-8",
+                        //把token放到请求头才能请求，这里的'Bearer '表示是后台希望更加的安全，依据后台给的信息看到底是加还是不加
+                        'token': encodeURIComponent(token)
+                        // 'token': this.token,
+                    }
+                }).then((res)=>{
+                    // console.log(res.data.data);
+                    // alert(res.data.data);
+                    // console.log(res)
+                    // console.log(res.data)
+                    if (res.data.ok){
+                        if (res.data.data.userType!=1){
+                            this.$message.error("登录信息错误");
+                            return
+                        }
+                        // this.$message.success(res.data.message);
+                        // this.token=res.data.data.token
+                        //token保存到本地
+                        console.log(res.data.data)
+                        this.res=res.data.data;
+                        this.getuser();
+                    }else this.$message.error(res.data.message);
+                });
+            },
+            exitlogin(){
+                localStorage.removeItem("token");
+                alert("已退出登录")
+            },
+            getuser(){
+                // alert("用户已更新")
+                this.user.name=this.res.user.name;
+                // this.user.flag=this.res.user.flag;
+                this.user.gender=this.res.user.gender;
+                this.user.email=this.res.user.email;
+                this.user.telephone=this.res.user.telephone;
+                this.user.address=this.res.user.address;
+                this.user.portraitpath=this.res.user.portraitpath;
+                // switch (this.res.user.flag){
+                //     case 0:this.user.flag="个人用户";
+                //     case 1:this.user.flag="零售用户";
+                // }
+                if (this.res.user.flag==2){
+                    this.user.flag="已认证"
+                }else this.user.flag="未认证"
+            },
+            replace(e){
+                if (this.user.id==null){
+                    this.$message.error("请刷新后重新选择");
+                    return;
+                }
+                console.log(e)
+                console.log(e.target.files);
+                if (e.target.files==null){
+                    this.$message.error("未提交图片");
+                    return
+                }
+            },
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>零售用户主页</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .pur {
+            margin-top: 10%;
+            margin-left: 40%;
+            margin-right:40%;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="pur">
+    <el-button type="text" >待付款</el-button>
+    <el-link type="warning">待付款</el-link>
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            // alert("初始化完成")
+            // this.login()
+        },
+        data:{
+
+        },
+        methods:{
+
+        }
+    });
+</script>
+</body>
+</html>

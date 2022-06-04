@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+<!--    <link rel="stylesheet" href="../plugins/elementui/index.css">-->
+<!--    <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css" />-->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .pur {
+            margin-top: 10%;
+            margin-left: 40%;
+            margin-right:40%;
+            text-align: center;
+        }
+        .aa{
+            display: block;
+            text-align: center;
+            margin-bottom: 30px;
+            margin-top: 10%;
+            /*text-align: center*/
+        }
+        .el-dropdown-link {
+            cursor: pointer;
+            color: #409EFF;
+        }
+        .el-icon-arrow-down {
+            font-size: 12px;
+        }
+        .e1{
+            float: left;
+            width: 380px;
+            margin-bottom: 20px;
+        }
+        .e2{
+            float: left;
+            margin-bottom: 20px;
+        }
+        body
+        {
+            background-image: url(../img/index2.webp);
+        }
+    </style>
+
+</head>
+<body>
+<div id="app" class="f">
+<!--    <a class="aa">登录页面</a>-->
+<!--    <button @click="tz()">跳转</button>-->
+<!--    <i class="el-icon-delete">{{token}}</i>-->
+<!--    <el-button @click="gettoken()" type="primary" round>刷新token</el-button>-->
+<!--    <el-button @click="tokenlogin()" type="primary" round>发起token登录</el-button>-->
+    <div class="pur">
+        <h1 style="margin-bottom: 100px">登录页面</h1>
+        <el-input v-model="user.username" placeholder="请输入名称" clearable></el-input>
+        <el-input placeholder="请输入密码" v-model="user.password" show-password clearable></el-input>
+<!--        <el-input v-model="user.verifiCode" placeholder="请输入验证码" clearable></el-input>-->
+        <el-button class="e1" type="warning" icon="el-icon-mouse" @click="getverifiCode()">{{user.verifiCode}}</el-button>
+        <br>
+        <div>
+            <el-radio class="e2" v-model="user.userType" label="1">普通用户登录</el-radio>
+            <el-radio class="e2" v-model="user.userType" label="2">供应商登录</el-radio>
+            <el-radio class="e2"  v-model="user.userType" label="3">管理员登录</el-radio>
+        </div>
+        <br>
+<!--        <el-radio v-model="" label="3">管理员登录</el-radio><br>-->
+        <el-button @click="login()" class="dalfBut" type="primary">登录</el-button>
+        <el-button onclick="location='register.html'" type="primary" round>点击注册</el-button>
+        <el-button onclick="location='../index.html'" type="primary" round>返回主页</el-button>
+    </div>
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+
+<!--<script src="../plugins/elementui/index.js"></script>-->
+<!--<script src="//unpkg.com/vue@next"></script>-->
+<!--<script src="//unpkg.com/element-plus"></script>-->
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            // alert("初始化完成")
+            // this.login()
+        },
+        data:{
+            user:{
+                username: "",
+                password:"",
+                userType: '1',
+                verifiCode:'点击获取验证码'
+            },
+            type:"",
+            flag:1,
+            token:"暂无"
+
+        },
+        methods:{
+            login(){
+                // alert("登录中")
+                if (this.user.username.replace(/(^s*)|(s*$)/g, "").length ==0 || this.user.password.replace(/(^s*)|(s*$)/g, "").length ==0){
+                    this.$message.error("您还没有输入");
+                    return '';
+                }
+                // http://localhost/users/dl/ab/g
+                this.user.username=this.user.username.replaceAll("\\s*","");
+                this.user.password=this.user.password.replaceAll("\\s*","");
+                axios.post("/system"+"/login/",this.user).then((res)=>{//
+                    console.log(res.data.data);
+                    // alert(res.data.data);
+                    if (res.data.ok){
+                        this.$message.success(res.data.message);
+                        // this.token=res.data.data.token
+                        //token保存到本地
+                        localStorage.setItem("token",res.data.data.token)
+                        // this.token=localStorage.getItem("token")
+                        // if (this.user.userType==1){
+                        //     // if (res.data.data.flag==1) window.location.href = "user-index.html";
+                        //     // else window.location.href = "user-personal-index.html";
+                        //     window.location.href = "user-personal-index.html";
+                        // }else window.location.href = "marchant-index.html";
+                        console.log(this.user.userType);
+                        switch (this.user.userType){
+                            case "1":
+                                console.log(this.user.userType);
+                                console.log("即将跳转个人");
+                                window.location.href = "user-personal-index.html";
+                                break
+                            case "2":
+                                console.log(this.user.userType);
+                                console.log("即将跳转商家");
+                                window.location.href = "marchant-index.html";
+                                break
+                            case "3":
+                                console.log(this.user.userType);
+                                console.log("即将跳转管理员");
+                                window.location.href = "admin-index.html";
+                                break
+                        }
+
+                    }else this.$message.error(res.data.message);
+                });
+
+            },
+            tz(){
+                this.$message.success("点了");
+                // this.$router.resolve({
+                //     path: "/user",
+                //     query: {id:96}
+                // });
+                window.location.href = "user.html";
+            },
+            handleCommand(command){
+                this.type=command
+            },
+            getverifiCode(){
+                axios.get("/system"+"/getImage/").then((res)=>{
+                    // console.log(res.data.data);
+                    alert(res.data);
+                    this.user.verifiCode=res.data
+                });
+            },
+            gettoken(){
+                this.token=localStorage.getItem("token")
+            },
+            tokenlogin(){
+                axios({
+                    method: 'get',
+                    url: '/system/getInfo',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': "application/json;charset=UTF-8",
+                        //把token放到请求头才能请求，这里的'Bearer '表示是后台希望更加的安全，依据后台给的信息看到底是加还是不加
+                        'token': encodeURIComponent(localStorage.getItem("token"))
+                        // 'token': this.token,
+                    }
+                }).then((res)=>{
+                    // console.log(res.data.data);
+                    // alert(res.data.data);
+                    if (res.data.ok){
+                        this.$message.success(res.data.message);
+                        // this.token=res.data.data.token
+                        //token保存到本地
+                        console.log(res.data.data)
+
+                    }else this.$message.error(res.data.message);
+                });
+            }
+        }
+    });
+</script>
+</body>
+</html>

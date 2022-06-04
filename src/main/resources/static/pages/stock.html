@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>商家库存页</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        .content-header {
+            position: relative;
+            padding: 15px 15px 0 15px;
+        }
+        .content-header > h1 {
+            margin: 0 ;
+            font-size: 24px;
+            font-weight: normal;
+        }
+        .box {
+            position: relative;
+            border-radius: 3px;
+            background: #ffffff;
+            border-top: 3px solid #3c8dbc;
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        }
+        .filter-container{
+
+            padding:10px 0 15px 0;
+
+        }
+        .filter-container .el-button,.filter-container .el-input__inner{
+
+            padding: 0 15px;
+
+            height: 34px;
+
+            line-height: 34px;
+
+        }
+        .pagiantion{
+
+            text-align: right;
+
+            padding: 15px;
+
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    11{{form.id}}11
+    <el-breadcrumb separator-class="el-icon-arrow-right">
+        <el-breadcrumb-item ><a href="marchant-index.html">首页</a></el-breadcrumb-item>
+        <el-breadcrumb-item><a href="marchant.html">个人信息</a></el-breadcrumb-item>
+        <el-breadcrumb-item><a href="stock.html">我的库存</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="marchant-order.html">订单管理</a></el-breadcrumb-item>
+    </el-breadcrumb>
+    <br>
+    <div class="content-header">
+        <h1>库存管理</h1>
+    </div>
+    <div class="box">
+        <div class="filter-container">
+            <el-input placeholder="药品id" v-model="pagination.id" clearable style="width: 200px;" ></el-input>
+            <el-button @click="getById()" icon="el-icon-search" type="primary" plain class="dalfBut">查询</el-button>
+            <el-input placeholder="药品名称" v-model="pagination.name" clearable style="width: 200px;" ></el-input>
+            <el-button @click="getByName()" icon="el-icon-search" type="primary" plain class="dalfBut">查询</el-button>
+            <el-button type="primary" icon="el-icon-circle-plus-outline" class="butT" @click="handleCreate()">新增药品</el-button>
+        </div>
+        <template>
+            <el-table size="small" current-row-key="id" :data="tableData" style="width: 100%" stripe highlight-current-row>
+                <el-table-column type="index" align="center" label="序号"></el-table-column>
+                <el-table-column prop="id" label="药品id" align="center"></el-table-column>
+                <el-table-column label="药品图片" width="180">
+                    <template slot-scope="scope">
+                        <el-image style="width: 70px; height: 70px" :src="scope.row.portraitpath"></el-image>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="name" label="药品名称" align="center"></el-table-column>
+                <el-table-column prop="price" label="药品价格" align="center"></el-table-column>
+                <el-table-column prop="quantity" label="药品数量" align="center"></el-table-column>
+                <el-table-column prop="stocktype" label="库存状态" align="center"></el-table-column>
+                <el-table-column label="操作" align="center">
+                    <template slot-scope="scope">
+<!--                        <a align="center">更新图片 <input type="file" @change="replace(scope.row)"></a>-->
+                        <el-popover placement="right" width="400" trigger="click">
+                            <input type="file" @change="replace">
+                            <el-button type="primary" size="mini" slot="reference" @click="ces(scope.row)">更新图片</el-button>
+                        </el-popover>
+                        <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
+
+                        <el-popover placement="top" width="160">
+                            <p>确定删除吗？</p>
+                            <div style="text-align: right; margin: 0">
+                                <el-button size="mini" type="text" @click="handleDelete1()">取消</el-button>
+                                <el-button type="primary" size="mini" @click="handleDelete2()">确定</el-button>
+                            </div>
+                            <el-button type="danger" size="mini" slot="reference" @click="handleDelete(scope.row)">删除</el-button>
+                        </el-popover>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </template>
+        <!--分页组件-->
+        <div class="pagination-container">
+            <el-pagination
+                    class="pagiantion"
+                    @current-change="handleCurrentChange"
+                    :current-page="pagination.currentPage"
+                    :page-size="pagination.pageSize"
+                    layout="total, prev, pager, next, jumper"
+                    :total="pagination.total">
+            </el-pagination>
+            <!-- 新增标签弹层 -->
+            <div>
+                <el-dialog title="新增药品" :visible.sync="dialogFormVisible">
+                    <el-form  ref="form" :model="form" :rules="rules" label-width="90px">
+                        <el-form-item label="药品名称" prop="name">
+                            <el-input v-model="form.name" ></el-input>
+                        </el-form-item>
+                        <el-form-item label="药品价格">
+                            <el-input-number v-model="form.price" :precision="2" :step="0.1" :max="99999.99" :min="0.10"></el-input-number>
+                        </el-form-item>
+                        <el-form-item label="药品规格">
+                            <el-input v-model="form.specification"></el-input>
+                        </el-form-item>
+                        <el-form-item label="生产厂家" prop="manufacturer">
+                            <el-input v-model="form.manufacturer"></el-input>
+                        </el-form-item>
+                        <el-form-item label="成品类型">
+                            <el-select v-model="form.producttype" placeholder="请选择药品成品类型">
+                                <el-option v-for="pt in producttype" :label="pt.producttype" :value="pt.id" :key="pt.id" ></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="包装类型">
+                            <el-select v-model="form.packtype" placeholder="请选择药品包装类型">
+                                <el-option v-for="pat in packtype" :label="pat.packtype" :value="pat.id" :key="pat.id" ></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="使用类型">
+                            <el-select v-model="form.usetype" placeholder="请选择药品使用类型">
+                                <el-option v-for="ut in usetype" :label="ut.usetype" :value="ut.id" :key="ut.id" ></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="包装单位">
+                            <el-select v-model="form.packagingunit" placeholder="请选择药品包装单位">
+                                <el-option v-for="put in packagingunit" :label="put.packagingunit" :value="put.id" :key="put.id" ></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="生产日期">
+                            <el-col :span="11">
+                                <el-date-picker clearable  value-format="yyyy-MM-dd" type="date" placeholder="选择日期" v-model="form.productiondate" style="width: 100%;"></el-date-picker>
+                            </el-col>
+                        </el-form-item>
+                        <el-form-item label="有效日期">
+                            <el-col :span="11">
+                                <el-date-picker clearable  value-format="yyyy-MM-dd" type="date" placeholder="选择日期" v-model="form.validityperiod" style="width: 100%;"></el-date-picker>
+                            </el-col>
+                        </el-form-item>
+                        <el-form-item label="添加数量">
+                            <el-input-number v-model="form.quantity" :min="1" :max="9999"></el-input-number>
+                        </el-form-item>
+                        <el-form-item label="上架">
+                            <el-switch v-model="form.stocktype"></el-switch>
+                        </el-form-item>
+                        <el-form-item label="批准文号">
+                            <el-input v-model="form.approvalnumber"></el-input>
+                        </el-form-item>
+                        </el-form-item>
+                    </el-form>
+                    <div slot="footer" class="dialog-footer">
+                        <el-button @click="cancel()">取 消</el-button>
+                        <el-button type="primary" @click="handleAdd()">确 定</el-button>
+                    </div>
+                </el-dialog>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            this.getAll()
+        },
+        data:{
+            currentRow: null,
+            tableData:[],
+            form: {//表单数据
+                id:null,
+                name:'',
+                price:'1',
+                specification:'',
+                manufacturer:'',
+                producttype:null,
+                packtype:null,
+                usetype:null,
+                packagingunit:null,
+                productiondate:null,
+                validityperiod:null,
+                stocktype:false,
+                approvalnumber:'',
+                quantity:'1',
+            },
+            rules:{//表单校验
+                name:[
+                    { required: true, message: '请输入药品名称', trigger: 'blur' },
+                    { min: 1, max: 30, message: '长度在 1 到 30 个字符', trigger: 'blur' }
+                ]
+            },
+            pagination: {//分页相关模型数据
+                currentPage: 1,//当前页码
+                pageSize:10,//每页显示的记录数
+                total:0,//总记录数
+                type:"",
+                id:null,
+                name:"",
+                quantity:""
+            },
+            dialogFormVisible:false,
+            formLabelWidth: '120px',
+            merchantid:'',
+            producttype:[],
+            packtype:[],
+            usetype:[],
+            packagingunit:[],
+            id:null
+        },
+        methods:{
+            getAll() {
+                token=localStorage.getItem("token");
+                if (token==null){
+                    // this.$message.error("token为空,即将返回登录页");
+                    alert("token为空,即将返回登录页");
+                    window.location.href = "login.html";
+                    return ;
+                }
+                axios({
+                    method: 'post',
+                    url: '/drugs/drugstocks/'+this.pagination.currentPage+"/"+this.pagination.pageSize,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': "application/json;charset=UTF-8",
+                        'token': encodeURIComponent(token)
+                    },
+                    data: this.pagination
+
+                }).then((res)=>{
+                    console.log(res.data);
+                    if (res.data.id==null){
+                    }
+                    this.pagination.pageSize=res.data.data.size;
+                    this.pagination.currentPage=res.data.data.current;
+                    this.pagination.total=res.data.data.total;
+                    this.tableData=res.data.data.records;
+                    this.merchantid=res.data.id;
+                });
+            },
+            //验证用户本人操作
+            tokenlogin(){
+                token=localStorage.getItem("token");
+                if (token==null){
+                    // this.$message.error("token为空,即将返回登录页");
+                    alert("token为空,即将返回登录页");
+                    window.location.href = "login.html";
+                    return ;
+                }
+                axios({
+                    method: 'get',
+                    url: '/system/getInfo',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': "application/json;charset=UTF-8",
+                        'token': encodeURIComponent(token)
+                        // 'token': this.token,
+                    }
+                }).then((res)=>{
+                    console.log(res.data.data);
+                    if (this.merchantid!=res.data.data.user.id){
+                        alert("登录信息有误,即将返回登录页");
+                        window.location.href = "login.html";
+                        return ;
+                    }
+                    if (res.data.data.userType!=2){
+                        alert("用户类型错误,即将返回登录页");
+                        window.location.href = "login.html";
+                        return ;
+                    }
+                });
+            },
+            ces(e){
+                console.log(e);
+                this.form.id=e.id;
+            },
+            replace(e){
+                if (this.form.id==null){
+                    this.$message.error("请刷新后重新选择");
+                    return;
+                }
+                console.log(e)
+                console.log(e.target.files);
+                if (e.target.files==null){
+                    this.$message.error("未提交图片");
+                    return
+                }
+                // this.tokenlogin()
+                let formdata = new FormData();
+                let formdrug = {};
+                Array.from(e.target.files).map(item => {
+                    console.log(item)
+                    formdata.append("file", item)  //将每一个文件图片都加进formdata
+                    axios({
+                        method: 'post',
+                        url: '/system/upload',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': "application/json;charset=UTF-8",
+                            // 'token': this.token,
+                        },
+                        data:formdata,
+                        params:{dir:"bbs"}
+                    })
+                    // axios.post("/system/upload", formdata)
+                        .then(res => {
+                        console.log(res);
+                        formdrug.portraitpath=res.data;
+                        formdrug.id=this.form.id;
+                        axios.post("/drugs/uploadimag", formdrug).then(res=>{
+                            if (res.data.ok){
+                                this.$message.success("药品图片更新成功");
+                            }else this.$message.error("药品图片更新失败");
+                        })
+                    }).finally(()=>{
+                        this.form.id=null;
+                        this.getAll();
+                    });
+                })
+
+            },
+            getById(){
+                id=Number(this.pagination.id);
+                if (id==0){
+                    this.$message.error("请输入要查询的药品id");
+                    return
+                }
+                if (!Number.isInteger(id)){
+                    console.log(this.pagination.id);
+                    this.$message.error("请输入整数");
+                    this.pagination.id="";
+                    return
+                }
+                this.pagination.name="";
+                this.getAll();
+            },
+            getByName(){
+                this.pagination.id=null;
+                if (Number(this.pagination.name)==0){
+                    this.pagination.name="";
+                }
+                this.getAll();
+            },
+            // 弹出编辑窗口
+            handleUpdate(row) {
+                this.resetForm();
+                console.log(row);
+                this.form.id=row.id;
+                this.handleCreateUpdate();
+            },
+            //修改弹出添加窗口
+            handleCreateUpdate() {
+                this.getType();
+
+                this.dialogFormVisible=true;
+            },
+            //删除药品
+            handleDelete(row){
+                this.id=row.id;
+            },
+            //删除取消
+            handleDelete1(row){
+                this.$message.info("取消删除");
+                this.id=null;
+            },
+            //确定删除
+            handleDelete2(row){
+                if (this.id==null){
+                    this.$message.error("请刷新后重试");
+                    return
+                }
+                this.tokenlogin();
+                axios.delete("/drugs/"+this.id).then(res=>{
+                    if (res.data.ok){
+                        this.$message.success("删除成功");
+                    }else this.$message.error("删除失败，请刷新后重试");
+                    this.id=null;
+                    this.getAll();
+                })
+            },
+            //切换页码
+            handleCurrentChange(currentPage) {
+                this.pagination.currentPage=currentPage;
+                this.getAll();
+            },
+            //新增弹出添加窗口
+            handleCreate() {
+                this.getType();
+                this.form.id=null;
+                this.dialogFormVisible=true;
+            },
+            //重置表单
+            resetForm() {
+                this.form.id=null;
+                this.form.name='';
+                this.form.specification='';
+                this.form.specification='';
+                this.form.price='1';
+                this.form.specification='';
+                this.form.manufacturer='';
+                this.form.productiondate=null;
+                this.form.validityperiod=null;
+                this.form.stocktype=false;
+                this.form.approvalnumber='';
+                this.form.quantity='1';
+                this.form.producttype=null;
+                this.form.usetype=null;
+                this.form.packagingunit=null;
+                this.form.packtype=null;
+                console.log("已重置");
+            },
+            //取消
+            cancel(){
+                this.form.id=null;
+                this.dialogFormVisible=false;
+                this.$message.info("当前操作取消");
+            },
+            //获取药品类型
+            getType(){
+                if (this.producttype!=''&&this.packtype!=''&&this.usetype!=''&&this.packagingunit!=''){
+                    // console.log(this.producttype);
+                    // console.log(this.packtype);
+                    // console.log(this.usetype);
+                    // console.log(this.packagingunit);
+                    console.log("已有药品类型");
+                    return
+                }
+                axios.get("/system/gettype/").then((res)=>{
+                    console.log(res.data)
+                    this.producttype=res.data.data.producttype;
+                    this.packtype=res.data.data.packtype;
+                    this.usetype=res.data.data.usetype;
+                    this.packagingunit=res.data.data.packagingunit;
+                })
+            },
+            //添加
+            handleAdd () {
+                if (this.merchantid==null||this.merchantid==''){
+                    this.getAll();
+                }
+                if (this.form.name==null||this.form.name==''){
+                    this.$message.error("请填写药品名称");
+                    return
+                }
+                let dates1=new Date(this.form.validityperiod);
+                let dates2=new Date(this.form.productiondate);
+                if (!(dates1>dates2)){
+                    this.$message.error("日期错误，请重新填写");
+                    return
+                }
+                this.tokenlogin();
+                this.form.merchantid=this.merchantid;
+                console.log(this.form)
+                axios.post("/drugs/add",this.form).then((res)=>{
+                    if (res.data.ok){
+                        this.dialogFormVisible=false;
+                        if (this.form.id!=null){
+                            this.$message.success("修改成功");
+                        }else this.$message.success("添加成功");
+                        this.resetForm();
+                        this.getAll();
+                    }else {
+                        this.$message.error(res.data.message);
+                    }
+                })
+            }
+        }
+    })
+</script>
+</body>
+</html>

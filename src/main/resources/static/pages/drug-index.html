@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>药品详情页</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .pur {
+            margin: auto;
+            width: 800px;
+            height: 800px;
+            top: 100px;
+            left: 0px;
+            right: 0px;
+            position: absolute;
+            text-align: center;
+            /*float: left;*/
+        }
+        .c1{
+            border:1px solid #8c939d;
+            width: 320px;
+            height: 320px;
+            float: left;
+            cursor: pointer;
+            position: relative;
+        }
+        .c2{
+            max-width: 400px;
+            height: 322px;
+            float: left;
+            overflow: auto;
+            /*background: #FDE2E2;*/
+        }
+        .c3{
+            width: 700px;
+            background:#00ffff;
+            float: left;
+        }
+        .c3-1{
+
+        }
+        .c3-2{
+
+        }
+        .c4{
+            width: 700px;
+            float: left;
+        }
+        .d1{
+            /*height: 40px;*/
+            background: #E1F3D8;
+        }
+        .el-form{
+            height: 322px;
+        }
+        .el-form-item{
+            max-height: 37px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-breadcrumb separator-class="el-icon-arrow-right">
+        <el-breadcrumb-item ><a href="user-personal-index.html">首页</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="user.html">个人信息</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="shoppingcart.html">购物车</a></el-breadcrumb-item>
+        <el-breadcrumb-item>商品详情页</el-breadcrumb-item>
+        <el-breadcrumb-item>活动详情</el-breadcrumb-item>
+    </el-breadcrumb>
+    <br>
+    <el-link type="success" href="login.html">登录</el-link>
+    <div class="pur">
+        <div class="c1">
+            <el-image style="max-width: 320px;max-height: 320px" :src="drug.portraitpath"></el-image>
+        </div>
+        <el-descriptions title="药品信息" :column="1" class="c2" border>
+            <el-descriptions-item label="药品名称:" class="d1">{{ drug.name }}</el-descriptions-item>
+            <el-descriptions-item label="药品编号:" class="d1">{{ drug.id }}</el-descriptions-item>
+            <el-descriptions-item label="批准文号:" class="d1">{{ drug.approvalnumber }}</el-descriptions-item>
+            <el-descriptions-item label="药品价格:" class="d1">￥{{drug.price}}</el-descriptions-item>
+            <el-descriptions-item label="产品规格:" class="d1">{{ drug.specification }}</el-descriptions-item>
+            <el-descriptions-item label="生产厂家:" class="d1">{{ drug.manufacturer }}</el-descriptions-item>
+        </el-descriptions>
+        <div class="c3">
+            <el-button type="primary" class="c3-1" >直接购买</el-button>
+            <el-button type="primary" class="c3-2" @click="submit()" >加入购物车</el-button>
+        </div>
+        <div class="c4">
+            <template>
+                <el-tabs v-model="activeName" type="card" @tab-click="handleClick">
+                    <el-tab-pane label="商品介绍" name="first">
+                        <el-descriptions title="药品详细信息" :column="1" class="margin-top">
+                            <el-descriptions-item label="产品品名" class="d1">{{ drug.name }}</el-descriptions-item>
+                            <el-descriptions-item label="产品规格" class="d1">{{ drug.specification }}</el-descriptions-item>
+                            <el-descriptions-item label="生产厂家" class="d1">{{ drug.manufacturer }}</el-descriptions-item>
+                            <el-descriptions-item label="生产日期" class="d1">{{ drug.productiondate }}</el-descriptions-item>
+                            <el-descriptions-item label="有效日期" class="d1">{{ drug.validityperiod }}</el-descriptions-item>
+                            <el-descriptions-item label="批准文号" class="d1">{{ drug.approvalnumber }}</el-descriptions-item>
+                            <el-descriptions-item label="包装类型" class="d1">{{ drugtype.packtype }}</el-descriptions-item>
+                            <el-descriptions-item label="成品类型" class="d1">{{ drugtype.producttype }}</el-descriptions-item>
+                            <el-descriptions-item label="使用类型" class="d1">{{ drugtype.usetype }}</el-descriptions-item>
+                            <el-descriptions-item label="包装单位" class="d1">{{ drugtype.packagingunit }}</el-descriptions-item>
+                            <el-descriptions-item label="库存数量" class="d1">{{ drug.quantity }}</el-descriptions-item>
+                            <el-descriptions-item label="库存状态" class="d1">{{ drug.stocktype }}</el-descriptions-item>
+                            <el-descriptions-item label="上架时间" class="d1">{{ drug.addtime}}</el-descriptions-item>
+                            <el-descriptions-item label="上架商家" class="d1">{{ shoppingcart.merchantname}}</el-descriptions-item>
+                        </el-descriptions>
+                    </el-tab-pane>
+                    <el-tab-pane label="说明书" name="second">配置管理</el-tab-pane>
+                    <el-tab-pane label="资质证明" name="third">资质证明</el-tab-pane>
+                </el-tabs>
+            </template>
+        </div>
+    </div>
+
+    <div >
+
+    </div>
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            // alert("初始化完成")
+            // this.login()
+            this.getname()
+        },
+        data:{
+            id:'',//存放url中的id，用来查询药品
+            drug: {
+                portraitpath:"https://drugimage.oss-cn-beijing.aliyuncs.com/bbs/2022/05/01/2e2ffc2f-8886-40e5-8c45-5bf0262fcbef.jpg",
+                // portraitpath:""
+                name:'adsf'
+            },
+            drugtype:{
+                packtype:'',
+                producttype:'',
+                usetype:'',
+                packagingunit:''
+            },
+            activeName: 'first',
+            shoppingcart:{
+                userid:'',
+                drugid:'',
+                name:'',
+                price:'',
+                specification:'',
+                quantity:'1',
+                portraitpath:'',
+                merchantname:'',
+                fettle:''
+            },
+            userid:'',
+        },
+        methods:{
+            //获取药品id
+            getname(){
+                var r=window.location.href.split('=')[1];
+                console.log(r);
+                r=Number(r);
+                if (r==0){
+                    this.$message.error("查询信息错误，请返回首页重新进入");
+                    return;
+                }
+                this.id=r;
+                this.getdrug();
+            },
+            //获取药品信息
+            getdrug(){
+                axios.get("/drugs/byid/"+this.id).then((res)=>{
+                    this.drug=res.data.data
+                    console.log(this.drug);
+                    this.getdrugtype();
+                    this.getmerchantname();
+                })
+            },
+            //获取药品类型
+            getdrugtype(){
+                this.drugtype.packtype=this.drug.packtype;
+                this.drugtype.producttype=this.drug.producttype;
+                this.drugtype.usetype=this.drug.usetype;
+                this.drugtype.packagingunit=this.drug.packagingunit;
+                axios.post("/drugtypes/byid/",this.drugtype).then((res)=>{
+                    console.log(res.data);
+                    // this.drugtype.packtype=res.data.data.packtype
+                    // this.drugtype.producttype=res.data.data.producttype
+                    // this.drugtype.usetype=res.data.data.usetype
+                    // this.drugtype.packagingunit=res.data.data.packagingunit
+                    this.drugtype=res.data.data
+                })
+            },
+            //获取商家名称
+            getmerchantname(){
+                axios.get("/usermarchants/cx/"+this.drug.merchantid).then((res)=>{
+                    this.shoppingcart.merchantname=res.data.data;
+                })
+            },
+            handleClick(tab, event) {
+                // console.log(tab, event);
+            },
+            //提交添加请求
+            submit(){
+                this.tokenCheck();
+            },
+            //添加进购物车
+            add(){
+                console.log(this.userid);
+                if (Number(this.userid)==0){
+                    this.$message.error("您还未登录，请登录后进行添加");
+                    return;
+                }
+                console.log("准备进行加入购物车");
+                this.shoppingcart.userid=this.userid;
+                this.shoppingcart.drugid=this.drug.id;
+                this.shoppingcart.name=this.drug.name;
+                this.shoppingcart.price=this.drug.price;
+                this.shoppingcart.specification=this.drug.specification;
+                this.shoppingcart.quantity='1';
+                this.shoppingcart.portraitpath=this.drug.portraitpath;
+                this.shoppingcart.merchantid=this.drug.merchantid;
+                this.shoppingcart.maxquantity=this.drug.quantity;
+                    // this.shoppingcart.merchantname='',
+                    this.shoppingcart.fettle=this.drug.stocktype,
+                    axios.post("/cart/add/",this.shoppingcart).then((res)=>{
+                        console.log("请求发送成功");
+                        if (res.data.ok){
+                            this.$message.success("添加购物车成功")
+                            return;
+                        }else this.$message.error(res.data.data)
+                    })
+                this.userid=''
+
+            },
+            //用户验证
+            tokenCheck(){
+                // var rr=Number(this.userid);
+                // console.log(rr);
+                // if (r==0){
+                //     this.$message.error("您还未登录，usid为空，请登录后进行添加")
+                //     return;
+                // }
+                token=localStorage.getItem("token");
+                if (token==null){
+                    this.$message.error("您还未登录，请登录后进行添加");
+                    // alert("token为空,即将返回登录页");
+                    // window.location.href = "login.html";
+                    return ;
+                }
+                axios({
+                    method: 'get',
+                    url: '/system/getInfo',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': "application/json;charset=UTF-8",
+                        //把token放到请求头才能请求，这里的'Bearer '表示是后台希望更加的安全，依据后台给的信息看到底是加还是不加
+                        'token': encodeURIComponent(token)
+                        // 'token': this.token,
+                    }
+                }).then((res)=>{
+                    if (res.data.ok){
+                        console.log(res);
+                        if (res.data.data.userType!=1){
+                            this.$message.error("您的用户类型不符合，请用普通用户账号进行添加");
+                            return;
+                        }
+                        // this.$message.success("用户验证成功"+res.data.message);
+                        console.log(res.data.data.user.id)
+                        this.userid=res.data.data.user.id;
+                        this.add();
+                        // this.token=res.data.data.token
+                        //token保存到本地
+                        // console.log(res.data.data)
+                        // this.res=res.data.data;
+                    }else {
+                        this.$message.error(res.data.message);
+                        console.log("因token验证错误停止");
+                    }
+                });
+            },
+        }
+    });
+</script>
+</body>
+</html>

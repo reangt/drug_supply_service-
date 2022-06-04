@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+</head>
+<body>
+
+<div id="app">
+    <input v-model="name">
+    <br>
+    <input v-model="url">
+    {{url}}
+    <input type="button" value="点击跳转" @click="show()">
+    <a v-bind:href="url">点击</a>
+    <input v-model="flag">
+    <div v-if="flag==1">
+        div1<br>
+        <el-row>
+            <el-button type="primary" round>蓝园</el-button>
+        </el-row>
+
+
+    </div>
+    <div v-else-if="flag==2">div2</div>
+    <div v-else>
+        <div v-for="i in user">
+            {{i}}<br>
+        </div>
+    </div>
+
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="../plugins/elementui/index.js"></script>
+
+<script>
+    new Vue({
+        el:"#app",
+        data:{
+            name:"",
+            password:"",
+            url:"",
+            flag:1,
+            user:["id","name","password"]
+        },
+        methods:{
+            show(){
+                alert("点了")
+            }
+        },
+        created(){
+            alert("初始化完成")
+        }
+    });
+</script>
+</body>
+</html>

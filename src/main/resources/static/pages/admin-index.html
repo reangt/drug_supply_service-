@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>管理员主页</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .pur{
+            /*padding: 15px;*/
+            margin-bottom: 50px;
+            margin-right: 10px;
+            margin-left: 10px;
+            margin-top: 10px;
+        }
+        .pp{
+            margin-top: 10px;
+        }
+        .content-header > h1 {
+            margin: 0 ;
+            font-size: 24px;
+            font-weight: normal;
+        }
+        .filter-container{
+
+            padding:10px 0 15px 0;
+
+        }
+        .filter-container .el-button,.filter-container .el-input__inner{
+
+            padding: 0 15px;
+
+            height: 34px;
+
+            line-height: 34px;
+
+        }
+        .pagiantion{
+
+            text-align: right;
+
+            padding: 15px;
+
+        }
+        .el-row {
+            margin-bottom: 20px;
+            margin-left: 50px;
+        }
+        .last-child {
+            margin-bottom: 0;
+        }
+
+        .el-col {
+            border-radius: 4px;
+            margin-left: 10px;
+            margin-right: 30px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+        }
+        .bg-purple-dark {
+            background: #99a9bf;
+        }
+        .bg-purple {
+            background: #d3dce6;
+        }
+        .bg-purple-light {
+            background: #e5e9f2;
+        }
+        .grid-content {
+            border-radius: 4px;
+            min-height: 36px;
+        }
+        .row-bg {
+            padding: 10px 0;
+            background-color: #f9fafc;
+        }
+        .vvvvvv{
+            height: 230px;
+        }
+        .dd1{
+            /*width: 500px;*/
+            /*height: 100px;*/
+            line-height: 100px;
+            /*border: 1px solid green;*/
+            text-align:center;
+            margin-top: 5%;
+        }
+        .tabs{
+            /*max-height: 800px;*/
+            /*min-height: 600px*/
+        }
+        .el-tabs__content{
+            height: calc(100vh - 110px);
+            overflow-y: auto;
+        }
+        .el-tabs__item{
+            height: 100px;
+        }
+        .el-tabs--left .el-tabs__item.is-left{
+            text-align: center;
+
+        }
+        /*根据条件隐藏table某行*/
+        .el-table .hidden-row {
+            display: none;
+        }
+        .el-image{
+            max-width: 80px;
+            max-height: 80px;
+            /*float: left*/
+            align-content: center;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-breadcrumb separator-class="el-icon-arrow-right">
+        <el-breadcrumb-item ><a href="admin-index.html">首页</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><el-button type="warning" icon="el-icon-arrow-right" @click="exitlogin()">退出登录</el-button></el-breadcrumb-item>
+    </el-breadcrumb>
+    <div class="pur">
+        <template>
+            <el-tabs :tab-position="tabPosition" type="border-card" class="tabs">
+                <el-tab-pane label="首页">
+                    <div class="dd1">
+                        <el-link  type="primary" :underline="false" class="ellink"><h1>管理员首页</h1></el-link>
+                    </div>
+                </el-tab-pane>
+                <el-tab-pane label="卖家管理">
+                    用户管理
+                    <template>
+                        <el-tabs v-model="activeName" type="card">
+                            <el-tab-pane label="全部" name="first">
+                                <template>
+                                    <el-table size="small" :data="tableData" style="width: 100%" stripe>
+                                        <el-table-column prop="id" label="审核编号" align="center" ></el-table-column>
+                                        <el-table-column prop="userid" label="用户id" align="center" ></el-table-column>
+                                        <el-table-column prop="username" label="用户名称" align="center" ></el-table-column>
+                                        <el-table-column label="证明材料" align="center" >
+                                            <template slot-scope="scopee">
+                                                <el-image class="" :src="scopee.row.certificatepath"></el-image>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column label="用户状态" align="center" >
+                                            <template slot-scope="scope">
+                                                <el-link v-if="scope.row.state==2" type="success" :underline="false">合格</el-link>
+                                                <el-link v-if="scope.row.state==3" type="error" :underline="false">不合格</el-link>
+                                                <el-link v-if="scope.row.state==1" type="warning" :underline="false">待核对</el-link>
+                                                <el-button v-if="scope.row.state==1" type="primary" size="mini" @click="toship(scope.row)">去校验</el-button>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+                                </template>
+                                <!--分页组件-->
+                                <div class="pagination-container">
+                                    <el-pagination
+                                            class="pagiantion"
+                                            @current-change="handleCurrentChange"
+                                            :current-page="pagination.currentPage"
+                                            :page-size="pagination.pageSize"
+                                            layout="total, prev, pager, next, jumper"
+                                            :total="pagination.total">
+                                    </el-pagination>
+                                </div>
+                            </el-tab-pane>
+                            <el-tab-pane label="待验证" name="second">
+                                <template>
+                                    <el-table size="small" :data="tableData" style="width: 100%" stripe :row-class-name="tableRowClassName">
+                                        <el-table-column prop="id" label="审核编号" align="center" ></el-table-column>
+                                        <el-table-column prop="userid" label="用户id" align="center" ></el-table-column>
+                                        <el-table-column prop="username" label="用户名称" align="center" ></el-table-column>
+                                        <el-table-column label="证明材料" align="center" >
+                                            <template slot-scope="scopee">
+                                                <el-image class="" :src="scopee.row.certificatepath"></el-image>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column prop="state" label="用户状态" align="center" ></el-table-column>
+                                        <el-table-column label="用户状态" align="center">
+                                            <template slot-scope="scope">
+<!--                                                <el-link v-if="scope.row.state==null" type="warning" :underline="false">待核对</el-link>-->
+                                                <el-link v-if="scope.row.state==1" type="warning" :underline="false">待核对</el-link>
+                                                <el-button v-if="scope.row.state==1" type="primary" size="mini" @click="toship(scope.row)">去校验</el-button>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+                                </template>
+                            </el-tab-pane>
+                        </el-tabs>
+                    </template>
+                </el-tab-pane>
+                <el-tab-pane label="买家管理">
+                    配置管理
+                </el-tab-pane>
+                <el-tab-pane label="药品管理">
+                    角色管理
+                </el-tab-pane>
+            </el-tabs>
+        </template>
+    </div>
+
+
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            // alert("初始化完成")
+            // this.login()
+            this.getAll();
+        },
+        data:{
+            tabPosition: 'left',
+            tableData:[],
+            pagination: {//分页相关模型数据
+                currentPage: 1,//当前页码
+                pageSize:24,//每页显示的记录数
+                total:0,//总记录数
+                type:"",
+                id:null,
+                name:"",
+                quantity:""
+            },
+            activeName: 'second'
+        },
+        methods:{
+            getAll() {
+                axios.post("/qrs/all2/"+this.pagination.currentPage+"/"+this.pagination.pageSize).then((res)=>{
+                    console.log(res.data);
+                    this.pagination.pageSize=res.data.data.size;
+                    this.pagination.currentPage=res.data.data.current;
+                    this.pagination.total=res.data.data.total;
+                    this.tableData=res.data.data.records;
+                });
+            },
+            //分页
+            handleCurrentChange(currentPage) {
+                this.pagination.currentPage=currentPage;
+                this.getAll();
+            },
+            //表格按需显示
+            tableRowClassName(row, index) {
+                if (row.row.status==2) {
+                    console.log(row)
+                    console.log(row.row.status)
+                    return 'hidden-row';
+                }
+                return '';
+            },
+            exitlogin(){
+                localStorage.removeItem("token");
+                this.$message.success("已退出登录，即将返回登录页面");
+                setTimeout(()=>{
+                    window.location.href = "login.html";
+                },2000)
+            },
+            //去核对
+            toship(row){
+                // console.log(row)
+                this.$prompt('请输入"确认合格"', '商家资质信息核对', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    // inputPattern: /[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/,
+                    // inputErrorMessage: '邮箱格式不正确'
+                }).then(({value}) => {
+                    this.$message.success("商家资质已验证通过")
+                    // console.log(value)
+                    // this.shipsuccess(row,value)
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '取消输入'
+                    });
+                });
+            },
+        }
+    });
+</script>
+</body>
+</html>

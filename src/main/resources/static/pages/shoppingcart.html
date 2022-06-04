@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>购物车</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .p {
+            margin-top: 10%;
+            margin-left: 40%;
+            margin-right:40%;
+        }
+        .box {
+            position: relative;
+            border-radius: 3px;
+            background: #ffffff;
+            border-top: 3px solid #3c8dbc;
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        }
+        .pagiantion{
+
+            text-align: right;
+
+            padding: 15px;
+
+        }
+        .content-header {
+            position: relative;
+            padding: 15px 15px 50px 15px;
+            border-bottom:3px solid #3c8dbc;
+            margin-bottom: 10px;
+        }
+        .content-header > h1 {
+            margin: 0 ;
+            font-size: 35px;
+            font-weight: normal;
+            /*float: right;*/
+        }
+        .filter-container{
+
+            padding:10px 0 15px 0;
+
+        }
+        .filter-container .el-button,.filter-container .el-input__inner{
+
+            padding: 0 15px;
+
+            height: 34px;
+
+            line-height: 34px;
+
+        }
+        .aa{
+            float: left;
+        }
+        .el-table .warning-row {
+            background: oldlace;
+        }
+        .ei{
+            max-width: 80px;
+            max-height: 80px;
+            float: left
+         }
+    </style>
+</head>
+<body>
+<div id="app" class="pur">
+    <el-breadcrumb separator-class="el-icon-arrow-right">
+        <el-breadcrumb-item ><a href="user-personal-index.html">首页</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="user.html">个人信息</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="shoppingcart.html">购物车</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="user-order.html">订单管理</a></el-breadcrumb-item>
+    </el-breadcrumb>
+    <br>
+    <div class="content-header">
+        <el-avatar :size="50" :src="user.portraitpath" class="aa"></el-avatar>
+        <h1>购物车</h1>
+    </div>
+
+<!--    显示购物车-->
+    <template>
+        <el-table size="small"  @selection-change="handleSelectionChange"
+                   :data="tableData" style="width: 100%" stripe highlight-current-row>
+<!--            <el-table-column type="index" align="center" label="序号"></el-table-column>-->
+            <el-table-column type="selection" width="55"  :selectable="selected"></el-table-column>
+            <el-table-column prop="merchantname" label="商家" align="center"></el-table-column>
+<!--            <el-table-column prop="name" label="药品名称" align="center"></el-table-column>-->
+            <el-table-column label="药品" width="180">
+                <template slot-scope="scope">
+                    <div>
+                        <el-image class="ei" :src="scope.row.portraitpath"></el-image>
+                        <a>{{scope.row.name}}</a><br>
+                        <a>{{scope.row.specification}}</a>
+                    </div>
+                </template>
+            </el-table-column>
+            <el-table-column prop="price" label="单价" align="center"></el-table-column>
+<!--            <el-table-column prop="specification" label="药品规格" align="center"></el-table-column>-->
+            <el-table-column prop="fettle" label="药品状态" align="center"></el-table-column>
+            <el-table-column prop="addtime" label="添加时间" align="center"></el-table-column>
+            <el-table-column  label="添加数量" align="center">
+                <template slot-scope="scope">
+                    <el-input-number v-model="scope.row.quantity"  controls-position="right" :min="1" :max="scope.row.maxquantity"></el-input-number>
+                </template>
+            </el-table-column>
+<!--            <el-table-column prop="prices" label="小计" align="center"></el-table-column>-->
+            <el-table-column label="操作" align="center">
+                <template slot-scope="scope">
+                    <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">去结算</el-button>
+                    <el-popover placement="top" width="160">
+                        <p>确定删除吗？</p>
+                        <div style="text-align: right; margin: 0">
+                            <el-button size="mini" type="text" @click="handleDelete1()">取消</el-button>
+                            <el-button type="primary" size="mini" @click="handleDelete2()">确定</el-button>
+                        </div>
+                        <el-button type="danger" size="mini" slot="reference" @click="handleDelete(scope.row)">删除</el-button>
+                    </el-popover>
+                </template>
+            </el-table-column>
+        </el-table>
+        <div style="margin-top: 20px">
+            <el-button @click="submit()">去结算</el-button>
+        </div>
+<!--        {{multipleSelection}}-->
+    </template>
+    <!--分页组件-->
+    <div class="pagination-container">
+        <el-pagination
+                class="pagiantion"
+                @current-change="handleCurrentChange"
+                :current-page="pagination.currentPage"
+                :page-size="pagination.pageSize"
+                layout="total, prev, pager, next, jumper"
+                :total="pagination.total">
+        </el-pagination>
+    </div>
+<!--    提交表单-->
+    <div>
+        <el-dialog title="填写订单" :visible.sync="dialogFormVisible">
+            <el-form ref="form" :model="form" label-width="100px" >
+                <el-form-item label="收货人名称" >
+                    <el-input v-model="form.receiver_name"></el-input>
+                </el-form-item>
+                <el-form-item label="收货人电话" >
+                    <el-input v-model="form.receiver_phone"></el-input>
+                </el-form-item>
+                <el-form-item label="收货人地址">
+                    <el-cascader v-model="form.address" :options="options"  placeholder="可输入地址快速选择"
+                                 :props="{ expandTrigger: 'hover' }" clearable filterable>
+                    </el-cascader>
+                </el-form-item>
+                <el-form-item label="详细地址" >
+                    <el-input v-model="form.receiver_detail_address" type="textarea"></el-input>
+                </el-form-item>
+                <el-form-item label="备注">
+                    <el-input v-model="form.note" type="textarea"></el-input>
+                </el-form-item>
+                <el-form-item label="订单明细">
+                    <el-table :data="multipleSelection" style="width: 100%">
+                        <el-table-column prop="name" label="药品名" align="center"></el-table-column>
+                        <el-table-column prop="quantity" label="购买数量" align="center"></el-table-column>
+                        <el-table-column prop="price" label="单价" align="center" ></el-table-column>
+                    </el-table>
+                </el-form-item>
+                <el-form-item label="预计金额">
+
+                </el-form-item>
+            </el-form>
+            <div slot="footer">
+                <el-button @click="cancel()">取 消</el-button>
+                <el-button type="primary" @click="handleAdd()">确 定</el-button>
+            </div>
+        </el-dialog>
+    </div>
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            // alert("初始化完成")
+            // this.login()
+            this.tokenlogin();
+        },
+        data:{
+            tableData:[],
+            tableData1:[{
+                name:"阿托伐他汀钙片(立普妥)",
+                merchantname:"广州白云山制药股份有限公司",
+                price:"46.0",
+                specification:"20mg*7片",
+                quantity:"1",
+                portraitpath:"https://drugimage.oss-cn-beijing.aliyuncs.com/bbs/2022/05/01/b61f0947-1963-4d1d-be94-d93688822748.jpg",
+                fettle:"true",
+                addtime:"2022-05-01 10:15:56",
+            },{
+                name:"阿托伐他汀钙片(立普妥)",
+                merchantname:"广州白云山",
+                price:"46.0",
+                specification:"20mg*7片",
+                quantity:"1",
+                portraitpath:"https://drugimage.oss-cn-beijing.aliyuncs.com/bbs/2022/05/01/b61f0947-1963-4d1d-be94-d93688822748.jpg",
+                fettle:"false"
+            },{
+                name:"阿托伐他汀钙片(立普妥)",
+                merchantname:"广州白云山制药股份有限公司",
+                price:"46.0",
+                specification:"20mg*7片",
+                quantity:"1",
+                portraitpath:"https://drugimage.oss-cn-beijing.aliyuncs.com/bbs/2022/05/01/b61f0947-1963-4d1d-be94-d93688822748.jpg",
+                fettle:"false"
+            }, {
+                name: "阿托伐他汀钙片",
+                merchantname: "广州白云山",
+                price: "46.0",
+                specification: "20mg*7片",
+                quantity: "1",
+                portraitpath: "https://drugimage.oss-cn-beijing.aliyuncs.com/bbs/2022/05/01/b61f0947-1963-4d1d-be94-d93688822748.jpg",
+                fettle: "true",
+                addtime: "2022-05-01 10:15:56"
+            }],
+            pagination: {//分页相关模型数据
+                currentPage: 1,//当前页码
+                pageSize:10,//每页显示的记录数
+                total:0,//总记录数
+                type:"",
+                id:null,
+                name:"",
+                quantity:""
+            },
+            user:{
+                name:'',
+                password:'',
+                flag:'',
+                certificatepath:'',
+                gender:'',
+                email:'',
+                telephone:'',
+                address:'',
+                portraitpath:'',
+            },
+            multipleSelection: [],
+            // newdata: [],
+            userid:'',
+            dialogFormVisible:false,
+            form:{},//提交表单数据
+            // rules:{
+            //     name: [
+            //         { required: true, message: '请输入收货人名称', trigger: 'blur' },
+            //         { min: 1, max: 10, message: '长度在 1 到 10 个字符', trigger: 'blur' }
+            //     ],
+            //     phone: [
+            //         { required: true, message: '请输入联系电话', trigger: 'blur' },
+            //         { min: 11, max: 11, message: '长度为11位数', trigger: 'blur' }
+            //     ],
+            //     address: [
+            //         { required: true, message: '请输入地址', trigger: 'blur' }
+            //     ],
+            //     detail_address: [
+            //         { required: true, message: '请输入详细地址', trigger: 'blur' },
+            //         { min: 3, max: 30, message: '长度在 3 到 30 个字符', trigger: 'blur' }
+            //     ],
+            // },
+            options: [{//地址数据
+                value: '北京市',
+                label: '北京市',
+                children: [{
+                    value: '东城区',
+                    label: '东城区',
+                    children: [{
+                        value: '东华门街道',
+                        label: '东华门街道'
+                    }, {
+                        value: '景山街道',
+                        label: '景山街道'
+                    }, {
+                        value: '交道口街道',
+                        label: '交道口街道'
+                    }, {
+                        value: '安定门街道',
+                        label: '安定门街道'
+                    }]
+                }, {
+                    value: '西城区',
+                    label: '西城区',
+                    children:[{
+                        value: '西长安街街道',
+                        label: '西长安街街道'
+                    },{
+                        value: '天桥街道 ',
+                        label: '天桥街道 '
+                    },
+                    ]
+                }]
+            },{
+                value: '湖北省',
+                label: '湖北省',
+                children:[{
+                    value: '武汉市',
+                    label: '武汉市',
+                    children:[{
+                        value: '江岸区 ',
+                        label: '江岸区 ',
+                    },{
+                        value: '江汉区 ',
+                        label: '江汉区 ',
+                    }]
+                },{
+                    value: '襄阳市',
+                    label: '襄阳市',
+                    children:[{
+                        value: '襄城区 ',
+                        label: '襄城区 ',
+                    },{
+                        value: '南漳县 ',
+                        label: '南漳县 ',
+                    }]
+                }
+                ]
+            }
+            ],
+        },
+        methods:{
+            handleCurrentChange(currentPage) {
+                this.pagination.currentPage=currentPage;
+                this.getAll();
+            },
+            handleSelectionChange(val){
+                this.multipleSelection = val;
+            },
+            //多选框按需禁用
+            selected(row, index) {
+                if (row.fettle != "true") {
+                    return false //不可勾选
+                } else {
+                    return true; //可勾选
+                }
+                console.log(row)
+            },
+            //用户验证
+            tokenlogin() {
+                token = localStorage.getItem("token");
+                if (token == null) {
+                    this.$message.error("您还未登录，请登录后查看");
+                    // alert("token为空,即将返回登录页");
+                    // window.location.href = "login.html";
+                    return;
+                }
+                axios({
+                    method: 'post',
+                    url: '/cart/getall/'+this.pagination.currentPage+"/"+this.pagination.pageSize,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': "application/json;charset=UTF-8",
+                        'token': encodeURIComponent(token)
+                    }
+                    // data: this.pagination
+
+                }).then((res)=>{
+                    console.log(res.data);
+                    if (!res.data.ok){
+                        this.$message.error("登录信息有误，请退出后重试");
+                        return
+                    }
+                    this.pagination.pageSize=res.data.data.size;
+                    this.pagination.currentPage=res.data.data.current;
+                    this.pagination.total=res.data.data.total;
+                    this.tableData=res.data.data.records;
+                    this.userid=res.data.id;
+                });
+            },
+            //去结算
+            submit(){
+                if (this.multipleSelection.length==0){
+                    this.$message.error("您还未选择商品");
+                    return;
+                }
+                token = localStorage.getItem("token");
+                if (token == null) {
+                    this.$message.error("您还未登录，请登录后查看");
+                    return;
+                }
+                axios({
+                    method: 'post',
+                    url: '/cart/getall/'+this.pagination.currentPage+"/"+this.pagination.pageSize,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': "application/json;charset=UTF-8",
+                        'token': encodeURIComponent(token)
+                    }
+                }).then((res)=>{
+                    // console.log(res.data);
+                    if (!res.data.ok){
+                        this.$message.error("登录信息有误，请退出后重试");
+                        return
+                    }
+                    if (this.userid!=res.data.id){
+                        this.$message.error("登录信息有误，请退出后重试");
+                        return
+                    }
+                    let modelItem=res.data.data.records;
+                    for (let i=0;i<this.multipleSelection.length;i++){
+                        for (let j=0;j<modelItem.length;j++){
+                            if (this.multipleSelection[i].id==modelItem[j].id){
+                                //价格更新
+                                this.multipleSelection[i].price=modelItem[j].price;
+                                //数量核对
+                                if (this.multipleSelection[i].quantity>modelItem[j].maxquantity){
+                                    this.multipleSelection[i].quantity=modelItem[j].maxquantity;
+                                }
+                            }
+                        }
+                    }
+                    this.$message.success("去结算验证完成")
+                });
+                this.dialogFormVisible=true;
+            },
+            //取消提交
+            cancel(){
+                alert("取消了")
+                this.dialogFormVisible=false
+            },
+            //确定提交
+            handleAdd(){
+                if (this.multipleSelection.length==0){
+                    this.$message.error("您还未选择商品");
+                    this.dialogFormVisible=false
+                    return;
+                }
+                if (this.form.receiver_detail_address==null||this.form.address==null
+                    ||this.form.receiver_phone==null||this.form.receiver_name==null){
+                    this.$message.error("您还未填写收货信息");
+                    return;
+                }
+                //提交验证
+                token = localStorage.getItem("token");
+                if (token == null) {
+                    this.$message.error("您还未登录，请登录后查看");
+                    return;
+                }
+                axios({
+                    method: 'post',
+                    url: '/cart/getall/'+this.pagination.currentPage+"/"+this.pagination.pageSize,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': "application/json;charset=UTF-8",
+                        'token': encodeURIComponent(token)
+                    }
+                }).then((res)=>{
+                    if (!res.data.ok){
+                        this.$message.error("登录信息有误，请退出后重试");
+                        return
+                    }
+                    if (this.userid!=res.data.id){
+                        this.$message.error("登录信息有误，请退出后重试");
+                        return
+                    }
+                    let modelItem=res.data.data.records;
+                    for (let i=0;i<this.multipleSelection.length;i++){
+                        for (let j=0;j<modelItem.length;j++){
+                            if (this.multipleSelection[i].id==modelItem[j].id){
+                                //价格核对
+                                if (this.multipleSelection[i].price!=modelItem[j].price){
+                                    console.log("价格出错")
+                                    this.$message.error("药品信息已更新，请刷新后重试")
+                                    return;
+                                }
+                                //数量核对
+                                if (this.multipleSelection[i].quantity>modelItem[j].maxquantity){
+                                    console.log("数量出错")
+                                    this.$message.error("药品信息已更新，请刷新后重试")
+                                    return;
+                                }
+                                //药品状态核对
+                                if (!modelItem[j].fettle){
+                                    console.log("药品状态出错")
+                                    this.$message.error("药品信息已更新，请刷新后重试")
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    this.$message.success("提交验证无误")
+                    //处理表单数据
+                    let newform={}
+                    newform.receiver_name=this.form.receiver_name
+                    newform.receiver_phone=this.form.receiver_phone
+                    newform.receiver_province=this.form.address[0]
+                    newform.receiver_city=this.form.address[1]
+                    newform.receiver_region=this.form.address[2]
+                    newform.receiver_detail_address=this.form.receiver_detail_address
+                    newform.note=this.form.note
+                    let newdata= {}
+                    newdata.userOrders=newform
+                    newdata.shoppingCarts=this.multipleSelection
+                    // axios.post("/orders/add",newform,this.multipleSelection).then(res=>{
+                    axios.post("/orders/add",newdata).then(res=>{
+                    // axios.post("/orders/add",this.multipleSelection).then(res=>{
+
+                        if (res.data.ok){
+                            // this.$message.success("订单提交成功");
+                            alert("订单提交成功")
+                            window.location.href = "user-order.html";
+                        }else {
+                            this.$message.error(res.data.data);
+                            return
+                        }
+                    })
+                    // console.log("----------")
+                    // console.log(this.form)
+                    // console.log("----------")
+                    // console.log(newform)
+                    // console.log("----------")
+                    // console.log(this.multipleSelection)
+                });
+                this.dialogFormVisible=false
+            }
+        }
+    });
+</script>
+</body>
+</html>

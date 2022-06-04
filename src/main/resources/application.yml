@@ -1,0 +1,73 @@
+spring:
+  datasource:
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.NonRegisteringDriver
+#      url: jdbc:mysql://localhost:3306/drug_supply?serverTimezone=UTC
+      url: jdbc:mysql://localhost:3306/drug_supply?useUnicode=true&characterEncoding=utf8&nullCatalogMeansCurrent=true&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
+      username: root
+      password: 1234
+      test-while-idle: false
+#      修复数据库连接失败，大多时候不加也没问题，但是特殊情况下会出现Public Key Retrieval is not allowed
+      allowPublicKeyRetrieval: true
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+      location: F://data//temp
+      enabled: true
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  profiles:
+    active: dev
+#  web:
+#    resources:
+#      static-locations:
+#  security:
+#    user:
+#      name: user
+#      password: 1111
+#  redis:
+#    host: localhost
+#    port: 6379
+#  cache:
+#    type: redis
+#    redis:
+#      time-to-live: 10s
+
+
+#spring:
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.NonRegisteringDriver
+#    url: jdbc:mysql://localhost:3306/book?serverTimezone=UTC
+#    username: root
+#    password: 1234
+
+
+#mybatis-plus:
+#  global-config:
+#    db-config:
+#      table-prefix:
+server:
+  port: 80
+mybatis-plus:
+  global-config:
+    db-config:
+      table-prefix:
+      id-type: auto
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: false
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+jetcache:
+  remote:
+    default:
+      type: redis
+      host: localhost
+      port: 6379
+      poolConfig:
+        maxTotal: 50

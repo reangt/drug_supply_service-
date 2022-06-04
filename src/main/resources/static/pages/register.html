@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册页面</title>
+    <!--    <link rel="stylesheet" href="../plugins/elementui/index.css">-->
+    <!--    <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css" />-->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .pur {
+            /*margin-top: 20%;*/
+            /*margin-left: 40%;*/
+            margin: auto;
+            margin-top: 15%;
+            width: 500px;
+            text-align: center;
+        }
+        .aa{
+            display: block;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .el-dropdown-link {
+            cursor: pointer;
+            color: #409EFF;
+        }
+        .el-icon-arrow-down {
+            font-size: 12px;
+        }
+        .d1{
+            /*float: left;*/
+            margin-bottom: 20px;
+        }
+        body
+        {
+            background-image: url(../img/index2.webp);
+        }
+    </style>
+
+</head>
+<body>
+<div id="app" class="f">
+    <div class="pur">
+        <div v-if="flag==user.userType">
+            <a class="aa">普通用户注册页面</a>
+        </div>
+        <div v-else>
+            <a class="aa">商家注册页面</a>
+        </div>
+        <el-input v-model="user.username" placeholder="请输入名称" clearable></el-input>
+        <el-input class="d1" placeholder="请输入密码" v-model="user.password" show-password clearable></el-input>
+        <div class="d1">
+            <el-radio  v-model="user.userType" label="1">普通用户注册</el-radio>
+            <el-radio v-model="user.userType" label="2">供应商注册</el-radio>
+        </div>
+        <div>
+            <el-button @click="register()" class="dalfBut" type="primary">注册</el-button>
+            <el-button onclick="location='login.html'" type="primary" round>返回登录</el-button>
+            <el-button onclick="location='../index.html'" type="primary" round>返回主页</el-button>
+        </div>
+    </div>
+
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+<!--<script src="../plugins/elementui/index.js"></script>-->
+<!--<script src="//unpkg.com/vue@next"></script>-->
+<!--<script src="//unpkg.com/element-plus"></script>-->
+
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            // alert("初始化完成")
+            // this.login()
+            this.getAll()
+        },
+        data:{
+            flag:1,
+            user:{
+                username: "",
+                password:"",
+                // type:""
+                userType: '1'
+            }
+
+
+        },
+        methods:{
+            register(){
+                // alert("注册中")
+                if (this.user.username==""||this.user.password==""){
+                    this.$message.error("您还没有输入");
+                }else {
+                    axios.post("/system"+"/register",this.user).then((res)=>{
+                        console.log("注册");
+                        console.log(res.data);
+                        if (res.data.ok){
+                            this.$message.success("注册"+res.data.message+",即将返回登录页面");
+                            setTimeout(()=>{
+                                window.location.href = "login.html";
+                            },2000)
+                        }else this.$message.error("注册失败，"+res.data.message);
+
+                        // alert(res.data);
+                        // if (res.data.flag){
+                        //     this.$message.success("注册成功");
+                        // }else this.$message.error(res.data.data);
+                        //
+                    }).finally(()=>{
+                        //刷新
+                        this.getAll();
+                    });
+                }
+            },
+            handleCommand(command){
+                this.users.type=command
+            },
+            getAll() {
+                this.user.username="";
+                this.user.password="";
+            }
+        }
+    });
+</script>
+</body>
+</html>

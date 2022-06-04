@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户订单管理页</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .content-header {
+            position: relative;
+            padding: 15px 15px 50px 15px;
+            border-bottom:3px solid #3c8dbc;
+            margin-bottom: 10px;
+        }
+        .content-header > h1 {
+            margin: 0 ;
+            font-size: 35px;
+            font-weight: normal;
+            /*float: right;*/
+        }
+        .aa{
+            float: left;
+        }
+        .ei{
+            max-width: 80px;
+            max-height: 80px;
+            float: left
+        }
+        .pagiantion{
+            text-align: right;
+            padding: 15px;
+        }
+        /*鼠标移动到当前行的颜色*/
+        .el-table tr:hover{
+            /*background: #00ffff;*/
+        }
+        /*根据条件隐藏table某行*/
+        .el-table .hidden-row {
+            display: none;
+        }
+        .el-image{
+            max-width: 80px;
+            max-height: 80px;
+            /*float: left*/
+            align-content: center;
+        }
+    </style>
+</head>
+<body>
+<div id="app" >
+    <el-breadcrumb separator-class="el-icon-arrow-right">
+        <el-breadcrumb-item ><a href="user-personal-index.html">首页</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="user.html">个人信息</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="shoppingcart.html">购物车</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="user-order.html">订单管理</a></el-breadcrumb-item>
+    </el-breadcrumb>
+    <br>
+    <div class="content-header">
+        <el-avatar :size="50" :src="user.portraitpath" class="aa"></el-avatar>
+        <h1>我的订单</h1>
+    </div>
+    <br>
+    <template>
+<!--        <el-tabs v-model="activeName" @tab-click="handleClick">-->
+        <el-tabs v-model="activeName">
+            <el-tab-pane label="全部订单" name="first">
+                <!--    显示购物车-->
+                <template>
+                    <el-table size="small" :data="tableData" style="width: 100%" stripe
+                              :row-key="getRowKeys" :expand-row-keys="expands" @current-change="toggleRowExpansion">
+                        <el-table-column type="expand" >
+                            <template slot-scope="scope">
+<!--                                <el-table :data="scope.row.newdata">-->
+<!--                                    <el-table-column prop="merchantname" label="商家名称" align="center" ></el-table-column>-->
+<!--                                    <el-table-column prop="drugname" label="药品名称" align="center" ></el-table-column>-->
+<!--                                </el-table>-->
+                                <el-table :data="scope.row.newdata">
+                                    <el-table-column label="图片" align="center" >
+                                        <template slot-scope="scopee">
+                                            <el-image class="" :src="scopee.row.drugportraitpath"></el-image>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="drugname" label="名称" align="center" ></el-table-column>
+                                    <el-table-column prop="drugquantity" label="数量" align="center" ></el-table-column>
+                                    <el-table-column prop="drugprice" label="单价" align="center" ></el-table-column>
+                                    <el-table-column prop="drugspecification" label="规格" align="center" ></el-table-column>
+                                    <el-table-column label="物流状态" align="center">
+                                        <template slot-scope="scope">
+                                            <el-link v-if="scope.row.status==1" type="warning" :underline="false">待发货</el-link>
+                                            <el-link v-if="scope.row.status==2" type="primary" :underline="false">{{scope.row.delivery_method}}</el-link>
+                                            <el-link v-if="scope.row.status==2" type="primary" :underline="false">待签收</el-link>
+                                            <el-link v-if="scope.row.status==3" type="success" :underline="false">已完成</el-link>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="id" label="订单编号" align="center" ></el-table-column>
+                        <el-table-column prop="total_amount" label="订单总金额" align="center"></el-table-column>
+                        <el-table-column label="收货信息" align="center" >
+                            <template slot-scope="scope">
+                                <div>
+                                    <a>{{scope.row.receiver_name}}</a><br>
+                                    <a>{{scope.row.receiver_phone}}</a>
+                                    <a>{{scope.row.receiver_province}}</a>
+                                    <a>{{scope.row.receiver_city}}</a>
+                                    <a>{{scope.row.receiver_region}}</a>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="status" label="订单状态" align="center">
+                            <template slot-scope="scope">
+<!--                                <el-tag v-if="scope.row.status==1">待付款</el-tag>-->
+<!--                                <span v-if="scope.row.status==1">待付款</span>-->
+                                <el-link v-if="scope.row.status==1" type="warning" :underline="false">待付款</el-link>
+                                <el-link v-if="scope.row.status==2" type="primary" :underline="false">待收货</el-link>
+                                <el-link v-if="scope.row.status==3" type="success" :underline="false">已完成</el-link>
+                                <el-link v-if="scope.row.status==4" type="info" :underline="false">已取消</el-link>
+<!--                                <span v-if="scope.row.status==2">待收货</span>-->
+<!--                                <span v-if="scope.row.status==3">已完成</span>-->
+<!--                                <span v-if="scope.row.status==4">取消</span>-->
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="addtime" label="下单时间" align="center"></el-table-column>
+                        <el-table-column prop="receive_time" label="确认收货时间" align="center"></el-table-column>
+                        <el-table-column label="操作" align="center">
+                            <template slot-scope="scope">
+<!--                                handleUpdate(scope.row)-->
+                                <el-button v-if="scope.row.status==1" type="primary" size="mini" @click="gopay(scope.row)">去支付</el-button>
+                                <el-button v-if="scope.row.status==1" type="primary" size="mini" @click="">取消订单</el-button>
+                                <el-button v-if="scope.row.status==2" type="primary" size="mini" @click="Receipt(scope.row)">确认收货</el-button>
+                                <el-button v-if="scope.row.status==2" type="primary" size="mini" @click="">退款</el-button>
+                                <el-button v-if="scope.row.status==3" type="primary" size="mini" @click="">删除</el-button>
+                                <el-button v-if="scope.row.status==3" type="primary" size="mini" @click="">申请售后</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </template>
+            </el-tab-pane>
+            <el-tab-pane label="待付款" name="second">
+                <template>
+                    <el-table size="small" :data="tableData" style="width: 100%" stripe :row-class-name="tableRowClassName"
+                              :row-key="getRowKeys" :expand-row-keys="expands" @current-change="toggleRowExpansion">
+                        <el-table-column type="expand" >
+                            <template slot-scope="scope">
+<!--                                <el-table :data="scope.row.newdata">-->
+<!--                                    <el-table-column prop="merchantname" label="商家名称" align="center" ></el-table-column>-->
+<!--                                    <el-table-column prop="drugname" label="药品名称" align="center" ></el-table-column>-->
+<!--                                </el-table>-->
+                                <el-table :data="scope.row.newdata">
+                                    <el-table-column label="图片" align="center" >
+                                        <template slot-scope="scopee">
+                                            <el-image class="" :src="scopee.row.drugportraitpath"></el-image>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="drugname" label="名称" align="center" ></el-table-column>
+                                    <el-table-column prop="drugquantity" label="数量" align="center" ></el-table-column>
+                                    <el-table-column prop="drugprice" label="单价" align="center" ></el-table-column>
+                                    <el-table-column prop="drugspecification" label="规格" align="center" ></el-table-column>
+                                    <el-table-column label="物流状态" align="center">
+                                        <template slot-scope="scope">
+                                            <el-link v-if="scope.row.status==1" type="warning" :underline="false">待发货</el-link>
+                                            <el-link v-if="scope.row.status==2" type="primary" :underline="false">{{scope.row.delivery_method}}</el-link>
+                                            <el-link v-if="scope.row.status==2" type="primary" :underline="false">待签收</el-link>
+                                            <el-link v-if="scope.row.status==3" type="success" :underline="false">已完成</el-link>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="id" label="订单编号" align="center" ></el-table-column>
+                        <el-table-column prop="total_amount" label="订单总金额" align="center"></el-table-column>
+                        <el-table-column label="收货信息" align="center" >
+                            <template slot-scope="scope">
+                                <div>
+                                    <a>{{scope.row.receiver_name}}</a><br>
+                                    <a>{{scope.row.receiver_phone}}</a>
+                                    <a>{{scope.row.receiver_province}}</a>
+                                    <a>{{scope.row.receiver_city}}</a>
+                                    <a>{{scope.row.receiver_region}}</a>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="status" label="订单状态" align="center">
+                            <template slot-scope="scope">
+                                <!--                                <el-tag v-if="scope.row.status==1">待付款</el-tag>-->
+                                <span v-if="scope.row.status==1">待付款</span>
+                                <span v-if="scope.row.status==2">待收货</span>
+                                <span v-if="scope.row.status==3">已完成</span>
+                                <span v-if="scope.row.status==4">取消</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="addtime" label="下单时间" align="center"></el-table-column>
+                        <el-table-column label="操作" align="center">
+                            <template slot-scope="scope">
+                                <!--                                handleUpdate(scope.row)-->
+                                <el-button v-if="scope.row.status==1" type="primary" size="mini" @click="gopay(scope.row)">去支付</el-button>
+                                <el-button v-if="scope.row.status==1" type="primary" size="mini" @click="">取消订单</el-button>
+                                <el-button v-if="scope.row.status==2" type="primary" size="mini" @click="">确认收货</el-button>
+                                <el-button v-if="scope.row.status==2" type="primary" size="mini" @click="">退款</el-button>
+                                <el-button v-if="scope.row.status==3" type="primary" size="mini" @click="">删除</el-button>
+                                <el-button v-if="scope.row.status==3" type="primary" size="mini" @click="">申请售后</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </template>
+            </el-tab-pane>
+            <el-tab-pane label="待收货" name="third">
+                <template>
+                    <el-table size="small" :data="tableData" style="width: 100%" stripe :row-class-name="tableRowClassName2"
+                              :row-key="getRowKeys" :expand-row-keys="expands" @current-change="toggleRowExpansion">
+                        <el-table-column type="expand" >
+                            <template slot-scope="scope">
+<!--                                <el-table :data="scope.row.newdata">-->
+<!--                                    <el-table-column prop="merchantname" label="商家名称" align="center" ></el-table-column>-->
+<!--                                    <el-table-column prop="drugname" label="药品名称" align="center" ></el-table-column>-->
+<!--                                </el-table>-->
+                                <el-table :data="scope.row.newdata">
+                                    <el-table-column label="图片" align="center" >
+                                        <template slot-scope="scopee">
+                                            <el-image class="" :src="scopee.row.drugportraitpath"></el-image>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="drugname" label="名称" align="center" ></el-table-column>
+                                    <el-table-column prop="drugquantity" label="数量" align="center" ></el-table-column>
+                                    <el-table-column prop="drugprice" label="单价" align="center" ></el-table-column>
+                                    <el-table-column prop="drugspecification" label="规格" align="center" ></el-table-column>
+                                    <el-table-column label="物流状态" align="center">
+                                        <template slot-scope="scope">
+                                            <el-link v-if="scope.row.status==1" type="warning" :underline="false">待发货</el-link>
+                                            <el-link v-if="scope.row.status==2" type="primary" :underline="false">{{scope.row.delivery_method}}</el-link>
+                                            <el-link v-if="scope.row.status==2" type="primary" :underline="false">待签收</el-link>
+                                            <el-link v-if="scope.row.status==3" type="success" :underline="false">已完成</el-link>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="id" label="订单编号" align="center" ></el-table-column>
+                        <el-table-column prop="total_amount" label="订单总金额" align="center"></el-table-column>
+                        <el-table-column label="收货信息" align="center" >
+                            <template slot-scope="scope">
+                                <div>
+                                    <a>{{scope.row.receiver_name}}</a><br>
+                                    <a>{{scope.row.receiver_phone}}</a>
+                                    <a>{{scope.row.receiver_province}}</a>
+                                    <a>{{scope.row.receiver_city}}</a>
+                                    <a>{{scope.row.receiver_region}}</a>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="status" label="订单状态" align="center">
+                            <template slot-scope="scope">
+                                <!--                                <el-tag v-if="scope.row.status==1">待付款</el-tag>-->
+                                <span v-if="scope.row.status==1">待付款</span>
+                                <span v-if="scope.row.status==2">待收货</span>
+                                <span v-if="scope.row.status==3">已完成</span>
+                                <span v-if="scope.row.status==4">取消</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="payment_time" label="支付时间" align="center"></el-table-column>
+                        <el-table-column label="操作" align="center">
+                            <template slot-scope="scope">
+                                <!--                                handleUpdate(scope.row)-->
+                                <el-button v-if="scope.row.status==1" type="primary" size="mini" @click="">去支付</el-button>
+                                <el-button v-if="scope.row.status==1" type="primary" size="mini" @click="">取消订单</el-button>
+                                <el-button v-if="scope.row.status==2" type="primary" size="mini" @click="Receipt(scope.row)">确认收货</el-button>
+                                <el-button v-if="scope.row.status==2" type="primary" size="mini" @click="">退款</el-button>
+                                <el-button v-if="scope.row.status==3" type="primary" size="mini" @click="">删除</el-button>
+                                <el-button v-if="scope.row.status==3" type="primary" size="mini" @click="">申请售后</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </template>
+            </el-tab-pane>
+            <el-tab-pane label="已完成" name="fourth">
+                <template>
+                    <el-table size="small" :data="tableData" style="width: 100%" stripe :row-class-name="tableRowClassName3"
+                              :row-key="getRowKeys" :expand-row-keys="expands" @current-change="toggleRowExpansion">
+                        <el-table-column type="expand" >
+                            <template slot-scope="scope">
+<!--                                <el-table :data="scope.row.newdata">-->
+<!--                                    <el-table-column prop="merchantname" label="商家名称" align="center" ></el-table-column>-->
+<!--                                    <el-table-column prop="drugname" label="药品名称" align="center" ></el-table-column>-->
+<!--                                </el-table>-->
+                                <el-table :data="scope.row.newdata">
+                                    <el-table-column label="图片" align="center" >
+                                        <template slot-scope="scopee">
+                                            <el-image class="" :src="scopee.row.drugportraitpath"></el-image>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="drugname" label="名称" align="center" ></el-table-column>
+                                    <el-table-column prop="drugquantity" label="数量" align="center" ></el-table-column>
+                                    <el-table-column prop="drugprice" label="单价" align="center" ></el-table-column>
+                                    <el-table-column prop="drugspecification" label="规格" align="center" ></el-table-column>
+                                    <el-table-column label="物流状态" align="center">
+                                        <template slot-scope="scope">
+                                            <el-link v-if="scope.row.status==1" type="warning" :underline="false">待发货</el-link>
+                                            <el-link v-if="scope.row.status==2" type="primary" :underline="false">{{scope.row.delivery_method}}</el-link>
+                                            <el-link v-if="scope.row.status==2" type="primary" :underline="false">待签收</el-link>
+                                            <el-link v-if="scope.row.status==3" type="success" :underline="false">已完成</el-link>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="id" label="订单编号" align="center" ></el-table-column>
+                        <el-table-column prop="total_amount" label="订单总金额" align="center"></el-table-column>
+                        <el-table-column label="收货信息" align="center" >
+                            <template slot-scope="scope">
+                                <div>
+                                    <a>{{scope.row.receiver_name}}</a><br>
+                                    <a>{{scope.row.receiver_phone}}</a>
+                                    <a>{{scope.row.receiver_province}}</a>
+                                    <a>{{scope.row.receiver_city}}</a>
+                                    <a>{{scope.row.receiver_region}}</a>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="status" label="订单状态" align="center">
+                            <template slot-scope="scope">
+                                <!--                                <el-tag v-if="scope.row.status==1">待付款</el-tag>-->
+                                <span v-if="scope.row.status==1">待付款</span>
+                                <span v-if="scope.row.status==2">待收货</span>
+                                <span v-if="scope.row.status==3">已完成</span>
+                                <span v-if="scope.row.status==4">取消</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="receive_time" label="确认收货时间" align="center"></el-table-column>
+                        <el-table-column label="操作" align="center">
+                            <template slot-scope="scope">
+                                <!--                                handleUpdate(scope.row)-->
+                                <el-button v-if="scope.row.status==1" type="primary" size="mini" @click="">去支付</el-button>
+                                <el-button v-if="scope.row.status==1" type="primary" size="mini" @click="">取消订单</el-button>
+                                <el-button v-if="scope.row.status==2" type="primary" size="mini" @click="">确认收货</el-button>
+                                <el-button v-if="scope.row.status==2" type="primary" size="mini" @click="">退款</el-button>
+                                <el-button v-if="scope.row.status==3" type="primary" size="mini" @click="">删除</el-button>
+                                <el-button v-if="scope.row.status==3" type="primary" size="mini" @click="">申请售后</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </template>
+            </el-tab-pane>
+            <el-tab-pane label="取消" name="fifth">
+                <template>
+                    <el-table size="small" :data="tableData" style="width: 100%" stripe :row-class-name="tableRowClassName4"
+                              :row-key="getRowKeys" :expand-row-keys="expands" @current-change="toggleRowExpansion">
+                        <el-table-column type="expand" >
+                            <template slot-scope="scope">
+<!--                                <el-table :data="scope.row.newdata">-->
+<!--                                    <el-table-column prop="merchantname" label="商家名称" align="center" ></el-table-column>-->
+<!--                                    <el-table-column prop="drugname" label="药品名称" align="center" ></el-table-column>-->
+<!--                                </el-table>-->
+                                <el-table :data="scope.row.newdata">
+                                    <el-table-column label="图片" align="center" >
+                                        <template slot-scope="scopee">
+                                            <el-image class="" :src="scopee.row.drugportraitpath"></el-image>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="drugname" label="名称" align="center" ></el-table-column>
+                                    <el-table-column prop="drugquantity" label="数量" align="center" ></el-table-column>
+                                    <el-table-column prop="drugprice" label="单价" align="center" ></el-table-column>
+                                    <el-table-column prop="drugspecification" label="规格" align="center" ></el-table-column>
+                                    <el-table-column label="物流状态" align="center">
+                                        <template slot-scope="scope">
+                                            <el-link v-if="scope.row.status==1" type="warning" :underline="false">待发货</el-link>
+                                            <el-link v-if="scope.row.status==2" type="primary" :underline="false">{{scope.row.delivery_method}}</el-link>
+                                            <el-link v-if="scope.row.status==2" type="primary" :underline="false">待签收</el-link>
+                                            <el-link v-if="scope.row.status==3" type="success" :underline="false">已完成</el-link>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="id" label="订单编号" align="center" ></el-table-column>
+                        <el-table-column prop="total_amount" label="订单总金额" align="center"></el-table-column>
+                        <el-table-column label="收货信息" align="center" >
+                            <template slot-scope="scope">
+                                <div>
+                                    <a>{{scope.row.receiver_name}}</a><br>
+                                    <a>{{scope.row.receiver_phone}}</a>
+                                    <a>{{scope.row.receiver_province}}</a>
+                                    <a>{{scope.row.receiver_city}}</a>
+                                    <a>{{scope.row.receiver_region}}</a>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="status" label="订单状态" align="center">
+                            <template slot-scope="scope">
+                                <!--                                <el-tag v-if="scope.row.status==1">待付款</el-tag>-->
+                                <span v-if="scope.row.status==1">待付款</span>
+                                <span v-if="scope.row.status==2">待收货</span>
+                                <span v-if="scope.row.status==3">已完成</span>
+                                <span v-if="scope.row.status==4">取消</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="addtime" label="下单时间" align="center"></el-table-column>
+                        <el-table-column label="操作" align="center">
+                            <template slot-scope="scope">
+                                <!--                                handleUpdate(scope.row)-->
+                                <el-button v-if="scope.row.status==1" type="primary" size="mini" @click="">去支付</el-button>
+                                <el-button v-if="scope.row.status==1" type="primary" size="mini" @click="">取消订单</el-button>
+                                <el-button v-if="scope.row.status==2" type="primary" size="mini" @click="">确认收货</el-button>
+                                <el-button v-if="scope.row.status==2" type="primary" size="mini" @click="">退款</el-button>
+                                <el-button v-if="scope.row.status==3" type="primary" size="mini" @click="">删除</el-button>
+                                <el-button v-if="scope.row.status==3" type="primary" size="mini" @click="">申请售后</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </template>
+            </el-tab-pane>
+        </el-tabs>
+    </template>
+    <!--分页组件-->
+    <div >
+        <el-pagination
+                class="pagiantion"
+                @current-change="handleCurrentChange"
+                :current-page="pagination.currentPage"
+                :page-size="pagination.pageSize"
+                layout="total, prev, pager, next, jumper"
+                :total="pagination.total">
+        </el-pagination>
+    </div>
+<!--    支付弹窗-->
+    <div>
+
+    </div>
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            // alert("初始化完成")
+            this.tokenlogin()
+        },
+        data:{
+            // 获取row的key值
+            getRowKeys(row) {
+                return row.id;
+            },
+            // 要展开的行，数值的元素是row的key值
+            expands: [],
+            user:{},
+            pagination: {//分页相关模型数据
+                currentPage: 1,//当前页码
+                pageSize:10,//每页显示的记录数
+                total:0,//总记录数
+                type:"",
+                id:null,
+                name:"",
+                quantity:""
+            },
+            multipleSelection:[],
+            tableData:[],//表格数据
+            tableData1:[{
+                id:"11",
+                total_amount:"1626",
+                status:"1",
+                addtime:"2022-05-06 10:01:59",
+                receiver_name:"小明",
+                receiver_phone:"12345687114",
+                receiver_province:"湖北省",
+                receiver_city:"襄阳市",
+                receiver_region:"南漳县 ",
+                note:"前台",
+                newdata:[{
+                    merchantname:"白云山",
+                    drugname:"板蓝根"
+                },{
+                    merchantname:"白云山111",
+                    drugname:"板蓝根111"
+                }]
+            },{
+                id:"12",
+                total_amount:"166",
+                status:"2",
+                addtime:"2022-05-06 9:01:59",
+                receiver_name:"小明f",
+                receiver_phone:"12345a687114",
+                receiver_province:"湖北d省",
+                receiver_city:"襄阳d市",
+                receiver_region:"南d漳县 ",
+                note:"前台aa",
+            }],
+            activeName: 'second',
+        },
+        methods:{
+            //只显示待付款
+            tableRowClassName(row, index) {
+                if (row.row.status!=1) {
+                    return 'hidden-row';
+                }
+                return '';
+            },
+            //只显示待收货
+            tableRowClassName2(row, index) {
+                if (row.row.status!=2) {
+                    return 'hidden-row';
+                }
+                return '';
+            },
+            //只显示已完成
+            tableRowClassName3(row, index) {
+                if (row.row.status!=3) {
+                    return 'hidden-row';
+                }
+                return '';
+            },
+            //只显示取消
+            tableRowClassName4(row, index) {
+                if (row.row.status!=4) {
+                    return 'hidden-row';
+                }
+                return '';
+            },
+            //去支付
+            gopay(row){
+                // console.log(row)
+                this.$confirm('支付总金额:￥'+row.total_amount, '支付确认信息', {
+                    confirmButtonText: '确定支付',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.$message({
+                        type: 'success',
+                        message: '支付成功!'
+                    });
+                    console.log("可以下一步了")
+                    this.paysuccess(row.id)
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消支付操作'
+                    });
+                });
+            },
+            paysuccess(row){
+                // console.log("要对订单编号为"+row+"的订单进行处理了")
+                axios.post("/orders/pays/"+row).then(res=>{
+                    alert("订单已更新")
+                    window.location.href="user-order.html"
+                })
+            },
+            //确认收货
+            Receipt(row){
+                this.$confirm('订单编号:'+row.id, '收货确认信息', {
+                    confirmButtonText: '确定收货',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.$message({
+                        type: 'success',
+                        message: '订单已完成!'
+                    });
+                    console.log("可以下一步了")
+                    this.toReceipt(row.id)
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消支付操作'
+                    });
+                });
+            },
+            toReceipt(row){
+                axios.post("/orders/receipt/"+row).then(res=>{
+                    alert("订单已更新")
+                    window.location.href="user-order.html"
+                })
+            },
+            //table展开行
+            toggleRowExpansion(row){
+                this.expands = [];//折叠其他行
+                this.expands.push(row.id);
+            },
+            //用户验证和获取数据
+            tokenlogin() {
+                token = localStorage.getItem("token");
+                if (token == null) {
+                    this.$message.error("您还未登录，请登录后查看");
+                    // alert("token为空,即将返回登录页");
+                    // window.location.href = "login.html";
+                    return;
+                }
+                axios({
+                    method: 'post',
+                    url: '/orders/getall/'+this.pagination.currentPage+"/"+this.pagination.pageSize,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': "application/json;charset=UTF-8",
+                        'token': encodeURIComponent(token)
+                    }
+                }).then(async  (res)=>{//执行异步操作
+                    // console.log(res.data);
+                    if (!res.data.ok){
+                        this.$message.error("登录信息有误，请退出后重试");
+                        return
+                    }
+                    this.pagination.pageSize=res.data.data.size;
+                    this.pagination.currentPage=res.data.data.current;
+                    this.pagination.total=res.data.data.total;
+                    this.tableData=res.data.data.records;
+                    this.userid=res.data.id;
+                    //获取订单商品表放入订单表
+                    //
+                     for (i=0;i<this.tableData.length;i++){
+                        // console.log("检测："+i)
+                        await axios.post("/ordercommodity/getall/1/10/"+this.tableData[i].id).then(res=>{
+                            this.tableData[i].newdata=res.data.data.records
+                        })
+                    }
+                     // console.log(this.tableData)
+                });
+            },
+            //Tabs标签页
+            handleClick(tab, event) {
+                console.log(tab, event);
+            },
+            //分页
+            handleCurrentChange(currentPage) {
+                this.pagination.currentPage=currentPage;
+                this.getAll();
+            },
+        }
+    });
+</script>
+</body>
+</html>

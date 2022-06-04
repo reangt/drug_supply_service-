@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>商家信息页</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .f {
+            /*margin-top: 10%;*/
+            margin-left: 2%;
+            width: 600px;
+            /*margin-right:80%;*/
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="">
+    <el-breadcrumb separator-class="el-icon-arrow-right">
+        <el-breadcrumb-item ><a href="marchant-index.html">首页</a></el-breadcrumb-item>
+        <el-breadcrumb-item><a href="marchant.html">个人信息</a></el-breadcrumb-item>
+        <el-breadcrumb-item><a href="stock.html">我的库存</a></el-breadcrumb-item>
+        <el-breadcrumb-item ><a href="marchant-order.html">订单管理</a></el-breadcrumb-item>
+    </el-breadcrumb>
+    <br>
+    <el-avatar :size="50" :src="user.portraitpath"></el-avatar>
+    <el-button type="warning" icon="el-icon-arrow-right" @click="exitlogin()">退出登录</el-button>
+    <el-button type="success" icon="el-icon-refresh-right" @click="tokenlogin()">刷新</el-button>
+    <br>
+
+    <div class="f">
+        <a>用户基本信息</a>
+        <el-form ref="user" :model="user" label-width="80px">
+            <el-form-item label="用户名称">{{user.name}}</el-form-item>
+            <el-form-item label="用户简介">{{user.data}}</el-form-item>
+            <el-form-item label="资格状态">{{user.flag}}</el-form-item>
+            <el-form-item label="用户邮箱">{{user.email}}</el-form-item>
+            <el-form-item label="用户电话">{{user.telephone}}</el-form-item>
+            <el-form-item label="用户地址">{{user.address}}</el-form-item>
+        </el-form>
+        <el-button type="primary" icon="el-icon-edit" @click="xg()">修改</el-button>
+        <el-popover placement="right" width="400" trigger="click">
+            <input type="file" @change="replace">
+            <el-button type="primary" icon="el-icon-upload"  slot="reference" @click="ces()">上传资质证明文件</el-button>
+        </el-popover>
+    </div>
+
+<!--    修改页面弹层-->
+    <div>
+        <el-dialog title="修改个人信息" :visible.sync="dialogVisible">
+            <el-form :model="formdata" label-width="80px">
+                <el-form-item label="用户简介">
+                    <el-input placeholder="请填写" v-model="formdata.data"></el-input>
+                </el-form-item>
+                <el-form-item label="用户邮箱">
+                    <el-input placeholder="请填写" v-model="formdata.email"></el-input>
+                </el-form-item>
+                <el-form-item label="用户电话">
+                    <el-input placeholder="请填写" v-model="formdata.telephone"></el-input>
+                </el-form-item>
+                <el-form-item label="用户地址">
+                    <el-input placeholder="请填写" v-model="formdata.address"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="dialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="modify()" v-loading.fullscreen.lock="fullscreenLoading">提交修改</el-button>
+            </div>
+        </el-dialog>
+    </div>
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            // alert("初始化完成")
+            this.tokenlogin()
+        },
+        data:{
+            user:{
+                name:'',
+                data:'',
+                flag:'',
+                email:'',
+                telephone:'',
+                address:'',
+                portraitpath:''
+            },
+            formdata:{
+                data:'',
+                email:'',
+                telephone:'',
+                address:''
+            },//表单数据
+            res:'', //暂存返回的用户数据
+            dialogVisible:false, //修改表单的控制器
+            fullscreenLoading:false,//表单加载
+            fileList: [],
+        },
+        methods:{
+            handleRemove(file, fileList) {
+                console.log(file, fileList);
+            },
+            handlePreview(file) {
+                console.log(file);
+            },
+            handleExceed(files, fileList) {
+                this.$message.warning(`当前限制选择 1个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+            },
+            beforeRemove(file, fileList) {
+                return this.$confirm(`确定移除 ${ file.name }？`);
+            },
+            loading(){
+                const loading = this.$loading({
+                    lock: true,
+                    text: '修改信息提交中',
+                    spinner: 'el-icon-loading',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+                setTimeout(()=>{
+                    this.dialogVisible=false;
+                    this.formdata.data='';
+                    this.formdata.email='';
+                    this.formdata.telephone='';
+                    this.formdata.address='';
+                    this.tokenlogin();
+                    this.$message.success("个人信息修改完成")
+                    loading.close();
+                    }, 6000);
+
+            },
+            xg(){
+                this.formdata.data=this.res.user.data;
+                this.formdata.email=this.res.user.email;
+                this.formdata.telephone=this.res.user.telephone;
+                this.formdata.address=this.res.user.address;
+                this.dialogVisible=true
+            },
+            modify(){
+                this.formdata.id=this.res.user.id;
+                token=localStorage.getItem("token");
+                if (token==null){
+                    // this.$message.error("token为空,即将返回登录页");
+                    alert("token为空,即将返回登录页");
+                    window.location.href = "login.html";
+                    return ;
+                }
+                if (this.formdata.data==null||this.formdata.email==null||this.formdata.telephone==null||this.formdata.address==null){
+                    this.$message.error("您还未输入完整");
+                    return;
+                }
+                axios({
+                    method: 'post',
+                    url: '/usermarchants/updata',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': "application/json;charset=UTF-8",
+                        'token': encodeURIComponent(token)
+                    },
+                    data:this.formdata
+                }).then((res)=>{
+                })
+                this.loading();
+            },
+            tokenlogin(){
+                token=localStorage.getItem("token");
+                if (token==null){
+                    // this.$message.error("token为空,即将返回登录页");
+                    alert("token为空,即将返回登录页");
+                    window.location.href = "login.html";
+                    return ;
+                }
+                axios({
+                    method: 'get',
+                    url: '/system/getInfo',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': "application/json;charset=UTF-8",
+                        //把token放到请求头才能请求，这里的'Bearer '表示是后台希望更加的安全，依据后台给的信息看到底是加还是不加
+                        'token': encodeURIComponent(token)
+                        // 'token': this.token,
+                    }
+                }).then((res)=>{
+                    // console.log(res.data.data);
+                    // alert(res.data.data);
+                    if (res.data.ok){
+                        // this.$message.success(res.data.message);
+                        // this.token=res.data.data.token
+                        //token保存到本地
+                        // console.log(res.data.data)
+                        if (res.data.data.userType!=2){
+                            this.$message.error("登录信息错误");
+                            return
+                        }
+                        this.res=res.data.data;
+                        this.getuser();
+                    }else this.$message.error(res.data.message);
+                });
+            },
+            exitlogin(){
+                localStorage.removeItem("token");
+                this.$message.success("已退出登录，即将返回登录页面");
+                setTimeout(()=>{
+                    window.location.href = "login.html";
+                },2000)
+            },
+            getuser(){
+                // alert("用户已更新")
+                this.user.name=this.res.user.name;
+                // this.user.flag=this.res.user.flag;
+                this.user.data=this.res.user.data;
+                this.user.email=this.res.user.email;
+                this.user.telephone=this.res.user.telephone;
+                this.user.address=this.res.user.address;
+                this.user.id=this.res.user.id;
+                this.user.portraitpath=this.res.user.portraitpath;
+                if (this.res.user.flag==2){
+                    this.user.flag="商家资格已认证"
+                }else this.user.flag="商家资格未认证"
+            },
+            ces(e){
+                // console.log(e);
+                // this.form.id=e.id;
+            },
+            replace(e){
+                if (this.user.id==null){
+                    this.$message.error("请刷新后重新选择");
+                    return;
+                }
+                console.log(e)
+                console.log(e.target.files);
+                if (e.target.files==null){
+                    this.$message.error("未提交图片");
+                    return
+                }
+                // this.tokenlogin()
+                let formdata = new FormData();
+                let formdrug = {};
+                Array.from(e.target.files).map(item => {
+                    console.log(item)
+                    formdata.append("file", item)  //将每一个文件图片都加进formdata
+                    axios({
+                        method: 'post',
+                        url: '/system/upload',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': "application/json;charset=UTF-8",
+                            // 'token': this.token,
+                        },
+                        data:formdata,
+                        params:{dir:"prove"}
+                    })
+                        // axios.post("/system/upload", formdata)
+                        .then(res => {
+                            console.log(res);
+                            formdrug.certificatepath=res.data;
+                            formdrug.id=this.user.id;
+                            formdrug.name=this.user.name;
+                            axios.post("/usermarchants/uploadprove", formdrug).then(res=>{
+                                if (res.data.ok){
+                                    this.$message.success("证明材料更新成功");
+                                }else this.$message.error("证明材料更新失败");
+                            })
+                        }).finally(()=>{
+                        // this.form.id=null;
+                        // this.getAll();
+                    });
+                })
+
+            },
+        }
+    });
+</script>
+</body>
+</html>

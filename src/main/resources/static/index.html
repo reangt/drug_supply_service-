@@ -1,0 +1,85 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .aa{
+            width: 500px;
+            height: 500px;
+            /*margin-left: 50%;*/
+            /*margin-right: 50%;*/
+            margin: auto;
+            margin-top: 15%;
+            text-align: center;
+            /*display: table-cell;*/
+        }
+        .a{
+            display:inline-block;
+            width:110px;
+            text-align: center;
+            /*margin-bottom: 10%*/
+        }
+        .a2{
+            margin: auto;
+            width: 220px;
+            margin-top: 10%;
+            /*border: 5px solid #00ffff;*/
+            /*float: left;*/
+        }
+        .el-button{
+            float: left;
+        }
+        .cs{
+            border: 5px solid #00ffff;
+            height: 300px;
+            /*background-image: url();*/
+        }
+        body
+        {
+            background-image: url(./img/index2.webp);
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="f">
+<!--    <div class="cs">-->
+<!--        <div :style="{backgroundImage:'url(url)'}" style="background-size: 100% 100%">-->
+<!--        </div>-->
+<!--    </div>-->
+    <div class="aa">
+            <h1>药品供应服务系统</h1><br>
+        <div class="a2">
+            <el-button onclick="location='pages/register.html'" type="primary" round>点击注册</el-button>
+            <el-button onclick="location='pages/login.html'" type="primary" round>点击登录</el-button>
+        </div>
+    </div>
+</div>
+
+<script src="js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="js/axios-0.18.0.js"></script>
+
+
+<script>
+    new Vue({
+        el:"#app",
+        created(){
+            // alert("初始化完成")
+            // this.login()
+        },
+        data:{
+            radio: '1',
+            keycode:2,
+            styleObject: {
+                url:'https://img-blog.csdnimg.cn/20201124180659202.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0JBRFJlYW1lcg==,size_16,color_FFFFFF,t_70#pic_center'
+            }
+        },
+        methods:{
+
+        }
+    });
+</script>
+</body>
+</html>
